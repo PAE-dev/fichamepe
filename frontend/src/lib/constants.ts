@@ -1,3 +1,34 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  Calendar,
+  FileText,
+  Grid,
+  Languages,
+  Monitor,
+  Music,
+  Palette,
+  TrendingUp,
+  Video,
+} from "lucide-react";
+
+/** Logo del sitio (S3, lectura pública). */
+export const SITE_LOGO_URL =
+  "https://fichamepe-assets-prod.s3.us-east-2.amazonaws.com/logo-fichamepe.png";
+
+/** Frases cortas de marca (reutilizar en hero, secciones, footer, etc.). */
+export const SITE_TAGLINES = [
+  "Nunca verás lo mismo dos veces.",
+  "Acá hay talento.",
+  "Alguien ya lo hace.",
+  "Deja de buscar, empieza a encontrar.",
+  "Más directo, imposible.",
+  "Sin floro.",
+  "Rápido y al punto.",
+  "Esto sí te sirve.",
+  "Justo lo que necesitabas.",
+  "Te puede salvar hoy.",
+] as const;
+
 export const COLORS = {
   primary: "#6C63FF",
   accent: "#C8F135",
@@ -7,28 +38,33 @@ export const COLORS = {
   textOnLight: "#1A1A2E",
 } as const;
 
-export type CategoryId =
+export type MacroCategorySlug =
   | "programacion"
   | "diseno"
   | "marketing"
   | "idiomas"
   | "video_foto"
+  | "eventos"
+  | "redaccion"
+  | "musica"
   | "otros";
 
-export type Category = {
-  id: CategoryId;
+export type HomeMacroCategory = {
+  slug: MacroCategorySlug;
   label: string;
-  emoji: string;
-  freelancerCount: number;
+  icon: LucideIcon;
 };
 
-export const CATEGORIES: Category[] = [
-  { id: "programacion", label: "Programación", emoji: "💻", freelancerCount: 142 },
-  { id: "diseno", label: "Diseño", emoji: "🎨", freelancerCount: 98 },
-  { id: "marketing", label: "Marketing", emoji: "📣", freelancerCount: 76 },
-  { id: "idiomas", label: "Idiomas", emoji: "🌍", freelancerCount: 54 },
-  { id: "video_foto", label: "Video/Foto", emoji: "🎬", freelancerCount: 61 },
-  { id: "otros", label: "Otros", emoji: "✨", freelancerCount: 69 },
+export const HOME_MACRO_CATEGORIES: HomeMacroCategory[] = [
+  { slug: "programacion", label: "Tecnología", icon: Monitor },
+  { slug: "diseno", label: "Diseño", icon: Palette },
+  { slug: "marketing", label: "Marketing", icon: TrendingUp },
+  { slug: "idiomas", label: "Idiomas", icon: Languages },
+  { slug: "video_foto", label: "Video & Foto", icon: Video },
+  { slug: "eventos", label: "Eventos", icon: Calendar },
+  { slug: "redaccion", label: "Redacción", icon: FileText },
+  { slug: "musica", label: "Música", icon: Music },
+  { slug: "otros", label: "Otros", icon: Grid },
 ];
 
 export const LIMA_DISTRICTS = [

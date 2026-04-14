@@ -1,0 +1,316 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import type { UseOverlayStateReturn } from "@heroui/react";
+import { Modal } from "@heroui/react/modal";
+import { Button } from "@heroui/react/button";
+import { Input } from "@heroui/react/input";
+import { Label } from "@heroui/react/label";
+import { FieldError } from "@heroui/react/field-error";
+import { Eye, EyeOff, X } from "lucide-react";
+import { parseApiErrorMessage, registerAccount } from "@/lib/api/auth.api";
+import { useAuthStore } from "@/store/auth.store";
+import { GoogleMark } from "@/components/auth/GoogleMark";
+
+const registerSchema = z
+  .object({
+    fullName: z.string().min(2, "Indica al menos 2 caracteres"),
+    email: z.string().min(1, "Requerido").email("Correo inválido"),
+    password: z.string().min(8, "Mínimo 8 caracteres"),
+    confirmPassword: z.string().min(1, "Confirma tu contraseña"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
+
+type RegisterForm = z.infer<typeof registerSchema>;
+
+type RegisterModalProps = {
+  state: UseOverlayStateReturn;
+  initialRole: "client" | "freelancer" | null;
+  onClosed: () => void;
+  onSwitchToLogin: () => void;
+};
+
+export function RegisterModal({
+  state,
+  initialRole,
+  onClosed,
+  onSwitchToLogin,
+}: RegisterModalProps) {
+  const router = useRouter();
+  const loginStore = useAuthStore((s) => s.login);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+    setError: setFormError,
+  } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  useEffect(() => {
+    if (!state.isOpen) {
+      onClosed();
+    }
+  }, [state.isOpen, onClosed]);
+
+  useEffect(() => {
+    if (!state.isOpen) return;
+    reset({
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
+  }, [state.isOpen, initialRole, reset]);
+
+  const onSubmit = async (data: RegisterForm) => {
+    try {
+      const res = await registerAccount({
+        fullName: data.fullName.trim(),
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+        ...(initialRole ? { role: initialRole } : {}),
+      });
+      loginStore(res.accessToken, res.user);
+      void import("@/stores/favoritesStore").then(({ useFavoritesStore }) => {
+        void useFavoritesStore.getState().syncFromApi();
+      });
+      reset();
+      state.close();
+      router.replace("/onboarding");
+    } catch (e: unknown) {
+      setFormError("root", {
+        message: parseApiErrorMessage(e, "No pudimos crear la cuenta."),
+      });
+    }
+  };
+
+  const pillInputClass =
+    "h-12 w-full rounded-full border border-[#E5E7EB] bg-white px-5 text-[15px] text-[#1A1A2E] shadow-none placeholder:text-[#9CA3AF] focus-visible:ring-2 focus-visible:ring-[#6C63FF]/35";
+
+  return (
+    <Modal state={state}>
+      <Modal.Backdrop
+        isDismissable
+        className="bg-[#1A1A2E]/50 backdrop-blur-[3px]"
+      >
+        <Modal.Container placement="center" size="lg" scroll="inside">
+          <Modal.Dialog className="w-full !max-w-[min(calc(100vw-12px),560px)] !p-0 sm:!max-w-[560px] rounded-3xl border border-[#E5E7EB] bg-white shadow-2xl shadow-[#1A1A2E]/10 outline-none">
+            <Modal.Header className="relative px-5 pb-1 pt-8 text-center sm:px-10 sm:pt-10">
+              <Modal.CloseTrigger
+                aria-label="Cerrar"
+                className="absolute right-3 top-3 inline-flex size-9 items-center justify-center rounded-full text-[#9CA3AF] transition-colors hover:bg-[#F3F4F6] hover:text-[#1A1A2E] sm:right-4 sm:top-4"
+              >
+                <X className="size-5" strokeWidth={2} aria-hidden />
+              </Modal.CloseTrigger>
+              <Modal.Heading className="text-xl font-semibold tracking-tight text-[#1A1A2E] sm:text-2xl">
+                Crea tu cuenta
+              </Modal.Heading>
+              <p className="mx-auto mt-2 max-w-[min(100%,380px)] text-sm leading-snug text-[#6B7280] sm:text-[15px]">
+                Completa tus datos para empezar en fícháme.pe.
+              </p>
+            </Modal.Header>
+
+            <Modal.Body className="px-5 pb-6 pt-3 sm:px-10 sm:pb-8 sm:pt-4">
+              <form
+                className="flex flex-col gap-4"
+                onSubmit={handleSubmit(onSubmit)}
+              >
+                <div className="flex flex-col gap-2">
+                  <Label
+                    htmlFor="register-modal-fullName"
+                    className="text-left text-sm font-medium text-[#374151]"
+                  >
+                    Nombre completo
+                  </Label>
+                  <Input
+                    id="register-modal-fullName"
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Tu nombre y apellido"
+                    className={pillInputClass}
+                    {...register("fullName")}
+                    aria-invalid={errors.fullName ? true : undefined}
+                  />
+                  {errors.fullName?.message ? (
+                    <FieldError className="text-sm text-red-600">
+                      {errors.fullName.message}
+                    </FieldError>
+                  ) : null}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label
+                    htmlFor="register-modal-email"
+                    className="text-left text-sm font-medium text-[#374151]"
+                  >
+                    Correo electrónico
+                  </Label>
+                  <Input
+                    id="register-modal-email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="Ingresa tu correo"
+                    className={pillInputClass}
+                    {...register("email")}
+                    aria-invalid={errors.email ? true : undefined}
+                  />
+                  {errors.email?.message ? (
+                    <FieldError className="text-sm text-red-600">
+                      {errors.email.message}
+                    </FieldError>
+                  ) : null}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label
+                    htmlFor="register-modal-password"
+                    className="text-left text-sm font-medium text-[#374151]"
+                  >
+                    Contraseña
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="register-modal-password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="Mínimo 8 caracteres"
+                      className={`${pillInputClass} pr-12`}
+                      {...register("password")}
+                      aria-invalid={errors.password ? true : undefined}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280] transition-colors hover:text-[#374151]"
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      aria-pressed={showPassword}
+                      onClick={() => setShowPassword((prev) => !prev)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-5" aria-hidden />
+                      ) : (
+                        <Eye className="size-5" aria-hidden />
+                      )}
+                    </button>
+                  </div>
+                  {errors.password?.message ? (
+                    <FieldError className="text-sm text-red-600">
+                      {errors.password.message}
+                    </FieldError>
+                  ) : null}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label
+                    htmlFor="register-modal-confirmPassword"
+                    className="text-left text-sm font-medium text-[#374151]"
+                  >
+                    Confirmar contraseña
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="register-modal-confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      placeholder="Repite tu contraseña"
+                      className={`${pillInputClass} pr-12`}
+                      {...register("confirmPassword")}
+                      aria-invalid={errors.confirmPassword ? true : undefined}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280] transition-colors hover:text-[#374151]"
+                      aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      aria-pressed={showConfirmPassword}
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="size-5" aria-hidden />
+                      ) : (
+                        <Eye className="size-5" aria-hidden />
+                      )}
+                    </button>
+                  </div>
+                  {errors.confirmPassword?.message ? (
+                    <FieldError className="text-sm text-red-600">
+                      {errors.confirmPassword.message}
+                    </FieldError>
+                  ) : null}
+                </div>
+
+                {errors.root?.message ? (
+                  <p className="text-center text-sm text-red-600" role="alert">
+                    {errors.root.message}
+                  </p>
+                ) : null}
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="h-12 w-full rounded-full bg-[#6C63FF] text-[15px] font-semibold text-white shadow-sm hover:opacity-[0.96]"
+                  isDisabled={isSubmitting}
+                >
+                  {isSubmitting ? "Creando cuenta…" : "Crear cuenta"}
+                </Button>
+              </form>
+
+              <div className="relative my-5 sm:my-6">
+                <div
+                  className="absolute inset-0 flex items-center"
+                  aria-hidden
+                >
+                  <span className="w-full border-t border-[#E5E7EB]" />
+                </div>
+                <div className="relative flex justify-center text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">
+                  <span className="bg-white px-3">O continúa con</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-12 w-full rounded-full border border-[#E5E7EB] bg-[#F9FAFB] text-[15px] font-medium text-[#1A1A2E] hover:bg-[#F3F4F6]"
+                onPress={() => {
+                  /* Mock: integración Google pendiente */
+                }}
+              >
+                <span className="flex w-full items-center justify-center gap-3">
+                  <GoogleMark className="size-5 shrink-0" />
+                  Continuar con Google
+                </span>
+              </Button>
+
+              <p className="mt-5 text-center text-sm text-[#6B7280] sm:mt-6 sm:text-[15px]">
+                ¿Ya tienes cuenta?{" "}
+                <button
+                  type="button"
+                  className="font-semibold text-[#6C63FF] underline-offset-2 hover:underline"
+                  onClick={() => onSwitchToLogin()}
+                >
+                  Iniciar sesión
+                </button>
+              </p>
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
+  );
+}

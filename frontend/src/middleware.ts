@@ -7,7 +7,9 @@ export function middleware(request: NextRequest) {
   const refresh = request.cookies.get(FP_REFRESH_COOKIE)?.value;
 
   const isProtected =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding");
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/cuenta");
 
   if (isProtected && !refresh) {
     const url = request.nextUrl.clone();
@@ -26,5 +28,7 @@ export const config = {
     "/dashboard/:path*",
     "/onboarding",
     "/onboarding/:path*",
+    "/cuenta",
+    "/cuenta/:path*",
   ],
 };

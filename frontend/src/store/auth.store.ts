@@ -15,7 +15,7 @@ type AuthState = {
   setLoading: (isLoading: boolean) => void;
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
   isAuthenticated: false,
@@ -23,21 +23,27 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: (accessToken, user) =>
     set({
       accessToken,
-      user,
+      user: { ...user, avatarUrl: user.avatarUrl ?? null },
       isAuthenticated: true,
     }),
   setAccessToken: (accessToken) =>
     set({ accessToken, isAuthenticated: !!accessToken }),
   logout: () => {
+    const hadSession = get().isAuthenticated || !!get().accessToken;
     set({
       user: null,
       accessToken: null,
       isAuthenticated: false,
     });
+    if (hadSession) {
+      void import("@/stores/favoritesStore").then(({ useFavoritesStore }) => {
+        useFavoritesStore.getState().reset();
+      });
+    }
     void import("@/lib/api").then(({ api }) =>
       api.post("/auth/logout", {}, { skipAuthRefresh: true }).catch(() => {}),
     );
   },
-  setUser: (user) => set({ user }),
+  setUser: (user) => set({ user: { ...user, avatarUrl: user.avatarUrl ?? null } }),
   setLoading: (isLoading) => set({ isLoading }),
 }));

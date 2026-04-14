@@ -121,7 +121,10 @@ export async function bootstrapSessionFromCookies(): Promise<boolean> {
     );
     useAuthStore.getState().setAccessToken(data.accessToken);
     const { data: user } = await api.get<AuthUser>("/auth/me");
-    useAuthStore.setState({ user, isAuthenticated: true });
+    useAuthStore.setState({
+      user: { ...user, avatarUrl: user.avatarUrl ?? null },
+      isAuthenticated: true,
+    });
     return true;
   } catch {
     return false;

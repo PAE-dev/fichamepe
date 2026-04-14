@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { RouterProvider } from "react-aria-components";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { AuthModalsProvider } from "@/components/auth/auth-modals-provider";
 import { SessionBootstrap } from "@/components/SessionBootstrap";
 
 /**
@@ -18,7 +20,8 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <HeroUIProvider>
       <SessionBootstrap />
-      {children}
+      <ServiceWorkerRegister />
+      <AuthModalsProvider>{children}</AuthModalsProvider>
     </HeroUIProvider>
   );
 }
