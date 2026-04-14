@@ -1,0 +1,134 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
+import { CurrentUser } from '../../../auth/infrastructure/decorators/current-user.decorator';
+import type { RequestUser } from '../../../auth/domain/services/auth-token.service.interface';
+import { CreateServiceBodyDto } from '../../application/dto/create-service.dto';
+import { FeedQueryDto } from '../../application/dto/feed-query.dto';
+import { AddFavoriteBodyDto } from '../../application/dto/add-favorite.dto';
+import { UpdateServiceBodyDto } from '../../application/dto/update-service.dto';
+import { AddServiceFavoriteUseCase } from '../../application/use-cases/add-service-favorite.use-case';
+import { CreateServiceUseCase } from '../../application/use-cases/create-service.use-case';
+import { DeleteServiceUseCase } from '../../application/use-cases/delete-service.use-case';
+import { GetFeedServicesUseCase } from '../../application/use-cases/get-feed-services.use-case';
+import { GetServiceByIdUseCase } from '../../application/use-cases/get-service-by-id.use-case';
+import { GetServicesByProfileUseCase } from '../../application/use-cases/get-services-by-profile.use-case';
+import { ListUserFavoriteIdsUseCase } from '../../application/use-cases/list-user-favorite-ids.use-case';
+import { ListUserFavoritesUseCase } from '../../application/use-cases/list-user-favorites.use-case';
+import { RemoveServiceFavoriteUseCase } from '../../application/use-cases/remove-service-favorite.use-case';
+import { ToggleServiceActiveUseCase } from '../../application/use-cases/toggle-service-active.use-case';
+import { UpdateServiceUseCase } from '../../application/use-cases/update-service.use-case';
+
+@Controller('services')
+export class ServicesController {
+  constructor(
+    private readonly getFeed: GetFeedServicesUseCase,
+    private readonly getByProfile: GetServicesByProfileUseCase,
+    private readonly getById: GetServiceByIdUseCase,
+    private readonly createService: CreateServiceUseCase,
+    private readonly updateService: UpdateServiceUseCase,
+    private readonly toggleActive: ToggleServiceActiveUseCase,
+    private readonly deleteService: DeleteServiceUseCase,
+    private readonly listFavoriteIds: ListUserFavoriteIdsUseCase,
+    private readonly listFavorites: ListUserFavoritesUseCase,
+    private readonly addFavorite: AddServiceFavoriteUseCase,
+    private readonly removeFavorite: RemoveServiceFavoriteUseCase,
+  ) {}
+
+  @Get('feed')
+  feed(@Query() query: FeedQueryDto) {
+    return this.getFeed.execute({
+      limit: query.limit ?? 20,
+      offset: query.offset ?? 0,
+      orderBy: query.orderBy ?? 'random',
+      search: query.search,
+      tags: query.tags,
+    });
+  }
+
+  @Get('profile/:profileId')
+  byProfile(
+    @Param('profileId', new ParseUUIDPipe()) profileId: string,
+  ) {
+    return this.getByProfile.execute(profileId);
+  }
+
+  @Get('favorites/ids')
+  @UseGuards(JwtAuthGuard)
+  favoriteIds(@CurrentUser() user: RequestUser) {
+    return this.listFavoriteIds.execute(user.userId);
+  }
+
+  @Get('favorites')
+  @UseGuards(JwtAuthGuard)
+  favorites(@CurrentUser() user: RequestUser) {
+    return this.listFavorites.execute(user.userId);
+  }
+
+  @Post('favorites')
+  @UseGuards(JwtAuthGuard)
+  addToFavorites(
+    @CurrentUser() user: RequestUser,
+    @Body() body: AddFavoriteBodyDto,
+  ) {
+    return this.addFavorite.execute(user.userId, body.serviceId);
+  }
+
+  @Delete('favorites/:serviceId')
+  @UseGuards(JwtAuthGuard)
+  removeFromFavorites(
+    @CurrentUser() user: RequestUser,
+    @Param('serviceId', new ParseUUIDPipe()) serviceId: string,
+  ) {
+    return this.removeFavorite.execute(user.userId, serviceId);
+  }
+
+  @Get(':id')
+  one(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.getById.execute(id);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  create(@CurrentUser() user: RequestUser, @Body() body: CreateServiceBodyDto) {
+    return this.createService.execute(user.userId, body);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: RequestUser,
+    @Body() body: UpdateServiceBodyDto,
+  ) {
+    return this.updateService.execute(id, user.userId, body);
+  }
+
+  @Patch(':id/toggle')
+  @UseGuards(JwtAuthGuard)
+  toggle(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.toggleActive.execute(id, user.userId);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  remove(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.deleteService.execute(id, user.userId);
+  }
+}

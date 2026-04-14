@@ -30,7 +30,8 @@ export class UploadsController {
       300,
     );
     const readUrl = await this.s3.generatePresignedReadUrl(key, 3600);
-    return { uploadUrl, key, readUrl };
+    const publicUrl = this.s3.buildPublicObjectUrl(key);
+    return { uploadUrl, key, readUrl, publicUrl };
   }
 
   @Delete()

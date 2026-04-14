@@ -16,6 +16,6 @@ export class SkillOrmEntity {
   @Column({ type: 'varchar' })
   category: string;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 }

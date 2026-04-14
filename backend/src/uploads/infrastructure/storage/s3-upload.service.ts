@@ -34,6 +34,9 @@ export class S3UploadService {
         accessKeyId,
         secretAccessKey,
       },
+      // Evita x-amz-checksum-* en URLs presignadas: el PUT desde el navegador no envía esos headers
+      // y S3 rechazaría la subida (403). Ver AWS SDK v3 requestChecksum default WHEN_SUPPORTED.
+      requestChecksumCalculation: 'WHEN_REQUIRED',
     });
   }
 
@@ -49,6 +52,19 @@ export class S3UploadService {
   buildKey(userId: string, type: UploadAssetType, filename: string): string {
     const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 180);
     return `uploads/${type}/${userId}/${Date.now()}-${safe}`;
+  }
+
+  /** URL HTTPS estable (virtual-hosted) para guardar en BD; el objeto debe ser legible públicamente o vía CDN. */
+  buildPublicObjectUrl(key: string): string {
+    const bucket = this.config.get<string>('AWS_S3_BUCKET')?.trim();
+    const region = this.config.get<string>('AWS_REGION')?.trim();
+    if (!bucket || !region) {
+      throw new ServiceUnavailableException(
+        'Almacenamiento S3 no está configurado. Define AWS_REGION y AWS_S3_BUCKET en .env cuando lo integres.',
+      );
+    }
+    const encodedKey = key.split('/').map(encodeURIComponent).join('/');
+    return `https://${bucket}.s3.${region}.amazonaws.com/${encodedKey}`;
   }
 
   async generatePresignedUploadUrl(

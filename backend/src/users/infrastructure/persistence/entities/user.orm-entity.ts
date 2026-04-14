@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { UserRole } from '../../../domain/entities/user';
 
-@Entity('users')
+@Entity('user')
 export class UserOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -34,15 +34,21 @@ export class UserOrmEntity {
   @Column({ type: 'boolean', default: false })
   isPro: boolean;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   proExpiresAt: Date | null;
 
   @Column({ type: 'int', default: 0 })
   tokenBalance: number;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @Column({ type: 'varchar', nullable: true })
+  passwordResetToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  passwordResetExpires: Date | null;
+
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'datetime' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 }

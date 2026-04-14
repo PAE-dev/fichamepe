@@ -52,6 +52,11 @@ class EnvironmentVariables {
   @IsNotEmpty()
   DATABASE_NAME?: string;
 
+  /** true = SSL explícito (Postgres remoto). Si el host es *.supabase.co, SSL se activa solo. */
+  @IsOptional()
+  @IsString()
+  DATABASE_SSL?: string;
+
   @IsString()
   @IsNotEmpty()
   JWT_SECRET!: string;

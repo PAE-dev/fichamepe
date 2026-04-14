@@ -55,17 +55,24 @@ export class SkillTypeOrmRepository implements ISkillRepository {
 
   async seed(items: SkillSeedItem[]): Promise<void> {
     for (const { name, category } of items) {
-      const exists = await this.repo.exists({
-        where: { name: name.trim() },
+      const trimmedName = name.trim();
+      const trimmedCategory = category.trim();
+      const existing = await this.repo.findOne({
+        where: { name: trimmedName },
       });
-      if (!exists) {
-        await this.repo.save(
-          this.repo.create({
-            name: name.trim(),
-            category: category.trim(),
-          }),
-        );
+      if (existing) {
+        if (existing.category !== trimmedCategory) {
+          existing.category = trimmedCategory;
+          await this.repo.save(existing);
+        }
+        continue;
       }
+      await this.repo.save(
+        this.repo.create({
+          name: trimmedName,
+          category: trimmedCategory,
+        }),
+      );
     }
   }
 }

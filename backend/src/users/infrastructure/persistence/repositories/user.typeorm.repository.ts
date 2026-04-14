@@ -62,6 +62,11 @@ export class UserTypeOrmRepository implements IUserRepository {
     if (patch.email !== undefined) {
       row.email = patch.email.trim().toLowerCase();
     }
+    if (patch.fullName !== undefined) {
+      const raw = patch.fullName;
+      const t = raw == null ? '' : raw.trim();
+      row.fullName = t.length ? t : null;
+    }
     if (patch.isActive !== undefined) {
       row.isActive = patch.isActive;
     }
@@ -79,5 +84,39 @@ export class UserTypeOrmRepository implements IUserRepository {
     }
     const saved = await this.repo.save(row);
     return toDomain(saved);
+  }
+
+  async setPasswordResetByEmail(
+    email: string,
+    token: string,
+    expires: Date,
+  ): Promise<boolean> {
+    const normalized = email.trim().toLowerCase();
+    const res = await this.repo.update(
+      { email: normalized },
+      { passwordResetToken: token, passwordResetExpires: expires },
+    );
+    return (res.affected ?? 0) > 0;
+  }
+
+  async consumePasswordReset(
+    token: string,
+    newPasswordHash: string,
+  ): Promise<boolean> {
+    const row = await this.repo.findOne({
+      where: { passwordResetToken: token },
+    });
+    if (
+      !row ||
+      !row.passwordResetExpires ||
+      row.passwordResetExpires.getTime() <= Date.now()
+    ) {
+      return false;
+    }
+    row.password = newPasswordHash;
+    row.passwordResetToken = null;
+    row.passwordResetExpires = null;
+    await this.repo.save(row);
+    return true;
   }
 }

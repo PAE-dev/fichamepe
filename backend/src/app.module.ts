@@ -13,6 +13,7 @@ import { TokensModule } from './tokens/tokens.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { AdminModule } from './admin/admin.module';
+import { ServicesModule } from './services/services.module';
 import { buildTypeOrmOptions } from './database/typeorm-options.factory';
 import { validateEnv } from './common/config/env.validation';
 import { LoggerModule } from './common/logger/logger.module';
@@ -47,6 +48,7 @@ import { LoggerModule } from './common/logger/logger.module';
     SubscriptionsModule,
     UploadsModule,
     AdminModule,
+    ServicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

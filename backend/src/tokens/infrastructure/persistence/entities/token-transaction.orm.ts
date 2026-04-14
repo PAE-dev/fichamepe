@@ -44,9 +44,9 @@ export class TokenTransactionOrmEntity {
   @Column({ type: 'simple-json', nullable: true })
   metadata: Record<string, unknown> | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   respondedAt: Date | null;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 }

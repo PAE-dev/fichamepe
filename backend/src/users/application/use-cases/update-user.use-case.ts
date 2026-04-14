@@ -39,6 +39,7 @@ export class UpdateUserUseCase {
     }
     const updated = await this.users.update(command.targetUserId, {
       email: command.patch.email,
+      fullName: command.patch.fullName,
       isActive: command.patch.isActive,
       isPro: command.patch.isPro,
       proExpiresAt: command.patch.proExpiresAt,

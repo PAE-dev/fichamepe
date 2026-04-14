@@ -6,11 +6,18 @@ import {
   IsEnum,
   IsInt,
   IsOptional,
+  IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { UserRole } from '../../domain/entities';
 
 export class UpdateUserBodyDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  fullName?: string;
+
   @IsOptional()
   @IsEmail()
   email?: string;

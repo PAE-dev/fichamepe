@@ -18,7 +18,6 @@ export const PREDEFINED_SKILLS_BY_CATEGORY: Record<string, readonly string[]> =
       'Illustrator',
       'Photoshop',
       'Canva',
-      'Video editing',
     ],
     marketing: [
       'Marketing digital',
@@ -28,13 +27,23 @@ export const PREDEFINED_SKILLS_BY_CATEGORY: Record<string, readonly string[]> =
       'Google Ads',
     ],
     idiomas: ['Inglés', 'Portugués', 'Francés', 'Alemán', 'Chino mandarín'],
-    otros: [
+    video_foto: [
+      'Video editing',
       'Fotografía',
-      'Redacción',
-      'Traducción',
-      'Clases particulares',
-      'Música',
+      'Edición de video',
+      'Motion graphics',
+      'Retoque fotográfico',
     ],
+    eventos: [
+      'Animación de fiestas',
+      'DJ para eventos',
+      'Organización de eventos',
+      'Catering',
+      'Decoración de eventos',
+    ],
+    redaccion: ['Redacción', 'Copywriting', 'Guiones', 'Blogging'],
+    musica: ['Música', 'Guitarra', 'Piano', 'Canto', 'Producción musical'],
+    otros: ['Traducción', 'Clases particulares', 'Consultoría', 'Asistente virtual'],
   };
 
 export const SKILL_CATEGORIES = Object.keys(PREDEFINED_SKILLS_BY_CATEGORY);

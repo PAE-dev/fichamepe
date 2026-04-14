@@ -15,7 +15,7 @@ import { PROFILE_REPOSITORY } from './profiles.di-tokens';
 @Module({
   imports: [
     TypeOrmModule.forFeature([ProfileOrmEntity, SkillOrmEntity]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
   ],
   controllers: [ProfilesController],

@@ -26,6 +26,20 @@ async function bootstrap() {
     }),
   );
   const port = Number(process.env.APP_PORT ?? process.env.PORT ?? 3000);
-  await app.listen(port);
+  try {
+    await app.listen(port);
+  } catch (err: unknown) {
+    const code =
+      err && typeof err === 'object' && 'code' in err ? String((err as { code: unknown }).code) : '';
+    if (code === 'EADDRINUSE') {
+      // eslint-disable-next-line no-console
+      console.error(
+        `\n[fichamepe] El puerto ${port} ya está en uso. Cierra el otro proceso (p. ej. otro \`nest start\`) o cambia APP_PORT en .env.\n` +
+          `  Linux: fuser -k ${port}/tcp  o  lsof -i :${port}\n`,
+      );
+      process.exit(1);
+    }
+    throw err;
+  }
 }
 bootstrap();

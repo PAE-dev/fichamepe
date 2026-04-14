@@ -10,7 +10,7 @@ import {
 import { UserOrmEntity } from '../../../../users/infrastructure/persistence/entities/user.orm-entity';
 import { SkillOrmEntity } from '../../../../skills/infrastructure/persistence/entities/skill.orm';
 
-@Entity('profiles')
+@Entity('profile')
 export class ProfileOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;

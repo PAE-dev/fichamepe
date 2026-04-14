@@ -13,6 +13,8 @@ type ErrorBody = {
   message: string | string[];
   timestamp: string;
   path: string;
+  /** Solo en development: mensaje real del error (p. ej. QueryFailedError). */
+  detail?: string;
 };
 
 @Catch()
@@ -36,6 +38,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
       path: request.url ?? '',
     };
+
+    if (
+      status === HttpStatus.INTERNAL_SERVER_ERROR &&
+      process.env.NODE_ENV !== 'production' &&
+      exception instanceof Error
+    ) {
+      body.detail = exception.message;
+    }
 
     response.status(status).json(body);
   }
