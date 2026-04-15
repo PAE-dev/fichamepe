@@ -5,6 +5,7 @@ import { SkillOrmEntity } from '../skills/infrastructure/persistence/entities/sk
 import { UsersModule } from '../users/users.module';
 import { CreateProfileUseCase } from './application/use-cases/create-profile.use-case';
 import { GetProfileByUserIdUseCase } from './application/use-cases/get-profile-by-user-id.use-case';
+import { GetPublicProfileByIdUseCase } from './application/use-cases/get-public-profile-by-id.use-case';
 import { SearchProfilesUseCase } from './application/use-cases/search-profiles.use-case';
 import { UpdateProfileUseCase } from './application/use-cases/update-profile.use-case';
 import { ProfilesController } from './infrastructure/controllers/profiles.controller';
@@ -24,6 +25,7 @@ import { PROFILE_REPOSITORY } from './profiles.di-tokens';
     CreateProfileUseCase,
     UpdateProfileUseCase,
     GetProfileByUserIdUseCase,
+    GetPublicProfileByIdUseCase,
     SearchProfilesUseCase,
   ],
   exports: [PROFILE_REPOSITORY],

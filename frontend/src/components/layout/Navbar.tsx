@@ -12,7 +12,6 @@ import { Dropdown } from "@heroui/react/dropdown";
 import { ChatDock } from "@/components/conversaciones/ChatDock";
 import { ConversationsPopover } from "@/components/conversaciones/ConversationsPopover";
 import { useAuthModals } from "@/components/auth/auth-modals-context";
-import { PublishSkillModal } from "@/components/services/PublishSkillModal";
 import { useAuthStore } from "@/store/auth.store";
 import { useConversationsStore } from "@/stores/conversationsStore";
 import { NavbarCompactSearch } from "@/components/layout/NavbarCompactSearch";
@@ -20,9 +19,9 @@ import { SITE_LOGO_URL } from "@/lib/constants";
 import type { AuthUser } from "@/types/auth";
 
 const ACCOUNT_MENU_LINKS = [
-  { href: "/dashboard?seccion=configuracion", label: "Configuración" },
-  { href: "/dashboard?seccion=publicaciones", label: "Mis publicaciones" },
-  { href: "/dashboard?seccion=solicitudes-aprobadas", label: "Solicitudes aprobadas" },
+  { href: "/cuenta/configuracion", label: "Configuración" },
+  { href: "/cuenta/publicaciones", label: "Mis publicaciones" },
+  { href: "/cuenta/publicaciones?filtro=REQUIERE_CAMBIOS", label: "Correcciones pendientes" },
 ] as const;
 
 function firstNameFromUser(user: AuthUser): string {
@@ -104,7 +103,7 @@ function UserAccountDropdown({ user }: { user: AuthUser }) {
             Editar perfil
           </Dropdown.Item>
           {ACCOUNT_MENU_LINKS.map((item) => (
-            <Dropdown.Item key={item.href} href={item.href} className="cursor-pointer">
+            <Dropdown.Item key={item.label} href={item.href} className="cursor-pointer">
               {item.label}
             </Dropdown.Item>
           ))}
@@ -234,8 +233,8 @@ function AuthButtons({
 }
 
 export function Navbar() {
+  const router = useRouter();
   const mobileNav = useOverlayState();
-  const publishSkillState = useOverlayState();
   const { openLogin, openRegister } = useAuthModals();
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -283,14 +282,13 @@ export function Navbar() {
           <div className="hidden items-center gap-2 lg:flex">
             {accountUser ? (
               <>
-                <Button
-                  variant="primary"
-                  className="hidden rounded-full bg-[#7B61FF] px-4 font-semibold text-white hover:opacity-95 xl:inline-flex"
-                  onPress={() => publishSkillState.open()}
+                <Link
+                  href="/skills/new"
+                  className="hidden h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-[#7B61FF] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-95 xl:inline-flex"
                 >
                   <Plus className="size-4" aria-hidden />
                   Publicar habilidad
-                </Button>
+                </Link>
 
                 <div className="relative" ref={conversationsMenuRef}>
                   <button
@@ -342,7 +340,7 @@ export function Navbar() {
               <>
                 <button
                   type="button"
-                  onClick={() => publishSkillState.open()}
+                  onClick={() => router.push("/skills/new")}
                   className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7B61FF] text-white shadow-sm transition hover:opacity-95"
                   aria-label="Publicar habilidad"
                 >
@@ -390,10 +388,10 @@ export function Navbar() {
                         <div className="space-y-2">
                           <Button
                             variant="primary"
-                            className="w-full rounded-full bg-[#7B61FF] font-semibold text-white hover:opacity-95"
+                            className="w-full whitespace-nowrap rounded-full bg-[#7B61FF] font-semibold text-white hover:opacity-95"
                             onPress={() => {
                               mobileNav.close();
-                              publishSkillState.open();
+                              router.push("/skills/new");
                             }}
                           >
                             <Plus className="size-4" aria-hidden />
@@ -437,7 +435,6 @@ export function Navbar() {
           </div>
         </div>
       </header>
-      <PublishSkillModal state={publishSkillState} />
       {accountUser ? <ChatDock /> : null}
     </>
   );

@@ -7,6 +7,7 @@ import {
   Monitor,
   Music,
   Palette,
+  Sparkles,
   TrendingUp,
   Video,
 } from "lucide-react";
@@ -47,6 +48,7 @@ export type MacroCategorySlug =
   | "eventos"
   | "redaccion"
   | "musica"
+  | "entretenimiento"
   | "otros";
 
 export type HomeMacroCategory = {
@@ -64,23 +66,6 @@ export const HOME_MACRO_CATEGORIES: HomeMacroCategory[] = [
   { slug: "eventos", label: "Eventos", icon: Calendar },
   { slug: "redaccion", label: "Redacción", icon: FileText },
   { slug: "musica", label: "Música", icon: Music },
+  { slug: "entretenimiento", label: "Entretenimiento", icon: Sparkles },
   { slug: "otros", label: "Otros", icon: Grid },
 ];
-
-export const LIMA_DISTRICTS = [
-  "Todos",
-  "Miraflores",
-  "San Isidro",
-  "Barranco",
-  "Surco",
-  "La Molina",
-  "San Borja",
-  "Jesús María",
-  "Lince",
-  "Magdalena",
-  "Pueblo Libre",
-  "Los Olivos",
-  "San Miguel",
-] as const;
-
-export type LimaDistrict = (typeof LIMA_DISTRICTS)[number];

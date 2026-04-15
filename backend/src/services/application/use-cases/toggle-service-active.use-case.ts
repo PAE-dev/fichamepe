@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -26,8 +27,13 @@ export class ToggleServiceActiveUseCase {
     if (existing.userId !== userId) {
       throw new ForbiddenException('No puedes modificar este servicio');
     }
+    if (existing.status !== 'ACTIVA' && existing.status !== 'PAUSADA') {
+      throw new BadRequestException(
+        'Solo puedes alternar publicaciones activas o pausadas',
+      );
+    }
     const updated = await this.services.update(id, {
-      isActive: !existing.isActive,
+      status: existing.status === 'ACTIVA' ? 'PAUSADA' : 'ACTIVA',
     });
     if (!updated) {
       throw new NotFoundException('Servicio no encontrado');

@@ -8,12 +8,27 @@ export type PresignUploadResponse = {
   publicUrl: string;
 };
 
+export type PresignUploadType = "avatar" | "portfolio" | "service_cover";
+
 export async function presignAvatarUpload(
   filename: string,
   contentType: string,
 ): Promise<PresignUploadResponse> {
   const { data } = await api.post<PresignUploadResponse>("/uploads/presign", {
     type: "avatar",
+    filename,
+    contentType,
+  });
+  return data;
+}
+
+export async function presignUpload(
+  type: PresignUploadType,
+  filename: string,
+  contentType: string,
+): Promise<PresignUploadResponse> {
+  const { data } = await api.post<PresignUploadResponse>("/uploads/presign", {
+    type,
     filename,
     contentType,
   });
@@ -45,6 +60,8 @@ export async function putFileToPresignedUrl(
 export type PatchUserBody = {
   email?: string;
   fullName?: string;
+  /** Solo `false`: desactiva la cuenta (no se puede reactivar desde la app). */
+  isActive?: boolean;
 };
 
 export async function patchCurrentUser(userId: string, body: PatchUserBody): Promise<void> {

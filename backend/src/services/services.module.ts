@@ -18,7 +18,10 @@ import { SERVICE_REPOSITORY } from './services.di-tokens';
 import { AddServiceFavoriteUseCase } from './application/use-cases/add-service-favorite.use-case';
 import { ListUserFavoriteIdsUseCase } from './application/use-cases/list-user-favorite-ids.use-case';
 import { ListUserFavoritesUseCase } from './application/use-cases/list-user-favorites.use-case';
+import { ListMyServicesUseCase } from './application/use-cases/list-my-services.use-case';
 import { RemoveServiceFavoriteUseCase } from './application/use-cases/remove-service-favorite.use-case';
+import { SetServiceStatusUseCase } from './application/use-cases/set-service-status.use-case';
+import { GetMyServiceByIdUseCase } from './application/use-cases/get-my-service-by-id.use-case';
 
 @Module({
   imports: [
@@ -39,8 +42,11 @@ import { RemoveServiceFavoriteUseCase } from './application/use-cases/remove-ser
     DeleteServiceUseCase,
     ListUserFavoriteIdsUseCase,
     ListUserFavoritesUseCase,
+    ListMyServicesUseCase,
+    GetMyServiceByIdUseCase,
     AddServiceFavoriteUseCase,
     RemoveServiceFavoriteUseCase,
+    SetServiceStatusUseCase,
   ],
   exports: [
     SERVICE_REPOSITORY,

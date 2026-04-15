@@ -51,6 +51,7 @@ export interface IProfileRepository {
     userId: string,
     patch: UpdateProfilePatch,
   ): Promise<Profile | null>;
+  findById(id: string): Promise<Profile | null>;
   findByUserId(userId: string): Promise<Profile | null>;
   search(filters: ProfileSearchFilters): Promise<ProfileSearchPage>;
 }

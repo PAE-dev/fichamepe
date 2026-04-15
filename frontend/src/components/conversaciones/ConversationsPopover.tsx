@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { ConversationListItem } from "@/components/conversaciones/ConversationListItem";
+import { getConversationPerspective } from "@/components/conversaciones/conversation-utils";
+import { useAuthStore } from "@/store/auth.store";
 import { useConversationsStore } from "@/stores/conversationsStore";
 
 type ConversationsPopoverProps = {
@@ -9,6 +11,7 @@ type ConversationsPopoverProps = {
 };
 
 export function ConversationsPopover({ onOpenChange }: ConversationsPopoverProps) {
+  const userId = useAuthStore((s) => s.user?.id ?? null);
   const conversations = useConversationsStore((state) => state.conversations);
   const activeConversationId = useConversationsStore((state) => state.activeConversationId);
   const openDockConversation = useConversationsStore((state) => state.openDockConversation);
@@ -26,7 +29,7 @@ export function ConversationsPopover({ onOpenChange }: ConversationsPopoverProps
       <div className="mb-2 flex items-center justify-between px-1">
         <h3 className="text-sm font-semibold text-foreground">Conversaciones</h3>
         <Link
-          href="/conversaciones"
+          href="/conversaciones?vista=consultas"
           onClick={() => onOpenChange(false)}
           className="text-xs font-semibold text-primary hover:underline"
         >
@@ -38,6 +41,7 @@ export function ConversationsPopover({ onOpenChange }: ConversationsPopoverProps
           <ConversationListItem
             key={conversation.id}
             conversation={conversation}
+            perspective={getConversationPerspective(conversation, userId)}
             isActive={activeConversationId === conversation.id}
             onClick={() => {
               openDockConversation(conversation.id);

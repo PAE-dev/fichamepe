@@ -17,10 +17,18 @@ export interface IServiceRepository {
 
   findByProfileId(profileId: string): Promise<Service[]>;
 
+  /** Todas las publicaciones del usuario (activas e inactivas), más recientes primero. */
+  findByUserId(userId: string): Promise<Service[]>;
+
   findById(id: string): Promise<Service | null>;
+
+  findActiveById(id: string): Promise<Service | null>;
 
   /** Misma forma que `findById` con perfil; respeta el orden de `ids`. Omite ids sin fila. */
   findByIdsOrdered(ids: string[]): Promise<Service[]>;
+
+  /** Cola de publicaciones pendientes de moderación, más recientes primero. */
+  findReviewQueue(): Promise<Service[]>;
 
   create(service: Partial<Service>): Promise<Service>;
 

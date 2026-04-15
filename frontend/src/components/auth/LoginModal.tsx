@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,6 +14,7 @@ import { Label } from "@heroui/react/label";
 import { FieldError } from "@heroui/react/field-error";
 import { Eye, EyeOff, X } from "lucide-react";
 import { fetchAuthMe, parseApiErrorMessage, postLogin } from "@/lib/api/auth.api";
+import { resolvePostLoginHref } from "@/lib/post-login-redirect";
 import { useAuthModals } from "@/components/auth/auth-modals-context";
 import { GoogleMark } from "@/components/auth/GoogleMark";
 import { useAuthStore } from "@/store/auth.store";
@@ -31,6 +32,7 @@ type LoginModalProps = {
 
 export function LoginModal({ state }: LoginModalProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { openRegister, openForgotPassword } = useAuthModals();
   const loginStore = useAuthStore((s) => s.login);
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
@@ -56,7 +58,8 @@ export function LoginModal({ state }: LoginModalProps) {
       loginStore(accessToken, user);
       reset();
       state.close();
-      router.replace("/");
+      const from = searchParams.get("from");
+      router.replace(resolvePostLoginHref(user.role, from));
     } catch (e: unknown) {
       setFormError("root", {
         message: parseApiErrorMessage(

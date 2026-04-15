@@ -39,11 +39,21 @@ const brandLogoRemotePatterns = (): {
   },
 ];
 
+/** Miniaturas demo en listas de conversación (mock). */
+const demoImageRemotePatterns = (): {
+  protocol: "https";
+  hostname: string;
+  pathname: string;
+}[] => [
+  { protocol: "https", hostname: "picsum.photos", pathname: "/**" },
+];
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       ...apiImageRemotePatterns(),
       ...brandLogoRemotePatterns(),
+      ...demoImageRemotePatterns(),
     ],
   },
 };

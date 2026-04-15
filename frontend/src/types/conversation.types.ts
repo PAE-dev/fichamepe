@@ -14,8 +14,22 @@ export type ConversationParticipant = {
 
 export type ConversationThread = {
   id: string;
+  serviceId?: string;
+  /** Dueño del servicio (publicador). */
+  sellerUserId?: string;
+  /** Quien consulta o contrata (comprador). */
+  buyerUserId?: string;
+  /** Solo demo: perspectiva a mostrar si el usuario real no coincide con buyer/seller. */
+  demoDefaultPerspective?: "buyer" | "seller";
   participant: ConversationParticipant;
   serviceTitle: string;
+  /** Portada del anuncio (miniatura en listas). */
+  serviceCoverImageUrl?: string | null;
+  /** Datos de referencia del anuncio (snapshot al abrir el chat). */
+  servicePrice?: number | null;
+  servicePreviousPrice?: number | null;
+  serviceCategory?: string | null;
+  serviceDeliveryTime?: string | null;
   unreadCount: number;
   messages: ConversationMessage[];
 };

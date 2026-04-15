@@ -2,10 +2,15 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Send, X } from "lucide-react";
+import { ConversationPerspectiveChip } from "@/components/conversaciones/ConversationPerspectiveChip";
+import { ConversationServiceCover } from "@/components/conversaciones/ConversationServiceCover";
 import { MessageBubble } from "@/components/conversaciones/MessageBubble";
+import { getConversationPerspective } from "@/components/conversaciones/conversation-utils";
+import { useAuthStore } from "@/store/auth.store";
 import { useConversationsStore } from "@/stores/conversationsStore";
 
 export function ChatDock() {
+  const userId = useAuthStore((s) => s.user?.id ?? null);
   const [draft, setDraft] = useState("");
   const dockConversationId = useConversationsStore((state) => state.dockConversationId);
   const isDockCollapsed = useConversationsStore((state) => state.isDockCollapsed);
@@ -21,6 +26,8 @@ export function ChatDock() {
 
   if (!conversation) return null;
 
+  const perspective = getConversationPerspective(conversation, userId);
+
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const cleaned = draft.trim();
@@ -32,11 +39,25 @@ export function ChatDock() {
   return (
     <div className="fixed bottom-0 right-4 z-[60] w-[min(100vw-16px,360px)] rounded-t-2xl border border-border bg-white shadow-2xl">
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">
-            {conversation.participant.fullName}
-          </p>
-          <p className="truncate text-[11px] text-muted">{conversation.serviceTitle}</p>
+        <div className="flex min-w-0 flex-1 items-start gap-2.5">
+          <ConversationServiceCover
+            coverUrl={conversation.serviceCoverImageUrl}
+            serviceTitle={conversation.serviceTitle}
+            initialsFallback={conversation.participant.initials}
+            perspective={perspective}
+            size="sm"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="truncate text-sm font-semibold text-foreground">
+                {conversation.participant.fullName}
+              </p>
+              <ConversationPerspectiveChip perspective={perspective} />
+            </div>
+            <p className="mt-0.5 truncate text-[11px] font-semibold leading-snug text-foreground/85">
+              {conversation.serviceTitle}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -64,7 +85,7 @@ export function ChatDock() {
 
       {!isDockCollapsed ? (
         <>
-          <div className="max-h-[300px] space-y-2 overflow-y-auto bg-background px-3 py-3">
+          <div className="h-[300px] space-y-2 overflow-y-auto bg-background px-3 py-3">
             {conversation.messages.map((message) => (
               <MessageBubble key={message.id} message={message} />
             ))}

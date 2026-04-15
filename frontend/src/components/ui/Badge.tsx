@@ -32,8 +32,23 @@ const BADGE_MAP: Record<
   },
 };
 
-export function Badge({ badge }: { badge: ServiceBadgeKey }) {
+export function Badge({
+  badge,
+  /** Sobre imagen de portada: contraste alto (no depender del color de la foto). */
+  overlay = false,
+}: {
+  badge: ServiceBadgeKey;
+  overlay?: boolean;
+}) {
   const config = BADGE_MAP[badge];
+  if (overlay) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-black/[0.08] bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-[0_2px_10px_rgba(0,0,0,0.22)] backdrop-blur-sm [&>svg]:shrink-0 [&>svg]:text-primary">
+        <config.Icon className="size-3.5" aria-hidden />
+        {config.label}
+      </span>
+    );
+  }
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${config.className}`}

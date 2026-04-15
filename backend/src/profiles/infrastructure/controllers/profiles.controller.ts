@@ -17,6 +17,7 @@ import { SearchProfilesQueryDto } from '../../application/dto/search-profiles.qu
 import { UpdateProfileBodyDto } from '../../application/dto/update-profile.dto';
 import { CreateProfileUseCase } from '../../application/use-cases/create-profile.use-case';
 import { GetProfileByUserIdUseCase } from '../../application/use-cases/get-profile-by-user-id.use-case';
+import { GetPublicProfileByIdUseCase } from '../../application/use-cases/get-public-profile-by-id.use-case';
 import { SearchProfilesUseCase } from '../../application/use-cases/search-profiles.use-case';
 import { UpdateProfileUseCase } from '../../application/use-cases/update-profile.use-case';
 
@@ -26,6 +27,7 @@ export class ProfilesController {
     private readonly createProfile: CreateProfileUseCase,
     private readonly updateProfile: UpdateProfileUseCase,
     private readonly getProfileByUserId: GetProfileByUserIdUseCase,
+    private readonly getPublicProfileById: GetPublicProfileByIdUseCase,
     private readonly searchProfiles: SearchProfilesUseCase,
   ) {}
 
@@ -53,6 +55,11 @@ export class ProfilesController {
     @Param('userId', new ParseUUIDPipe({ version: '4' })) userId: string,
   ) {
     return this.getProfileByUserId.execute(userId);
+  }
+
+  @Get(':id')
+  getPublicById(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    return this.getPublicProfileById.execute(id);
   }
 
   @Post()

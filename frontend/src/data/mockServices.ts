@@ -16,17 +16,25 @@ const now = Date.now();
 
 function buildService(input: MockInput, index: number): ServicePublic {
   const hasFlash = index % 3 === 0;
+  const previousPrice = hasFlash
+    ? (input.previousPrice ?? Math.round(input.price * 1.25))
+    : (input.previousPrice ?? null);
   return {
     id: input.id,
     title: input.title,
     description: input.description,
     price: input.price,
-    previousPrice: input.previousPrice ?? Math.round(input.price * 1.25),
+    previousPrice,
     currency: "PEN",
     coverImageUrl: null,
+    status: "ACTIVA",
     isActive: true,
     viewCount: 210 + index * 17,
     tags: input.tags,
+    category: "other",
+    deliveryMode: "digital",
+    deliveryTime: "1-2 días",
+    revisionsIncluded: "1",
     profileId: `profile-${input.id}`,
     userId: `user-${input.id}`,
     createdAt: new Date(now - index * 86_400_000).toISOString(),

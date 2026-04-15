@@ -10,6 +10,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import type { ServiceStatus } from '../../../domain/entities/service.domain';
 
 const priceNumberTransformer = {
   to: (value: number | null | undefined) => value ?? null,
@@ -18,7 +19,7 @@ const priceNumberTransformer = {
 };
 
 @Entity('service')
-@Index(['isActive'])
+@Index(['status'])
 @Index(['viewCount'])
 @Index(['createdAt'])
 export class ServiceOrmEntity {
@@ -28,7 +29,7 @@ export class ServiceOrmEntity {
   @Column({ type: 'varchar', length: 80 })
   title: string;
 
-  @Column({ type: 'varchar', length: 280 })
+  @Column({ type: 'varchar', length: 600 })
   description: string;
 
   @Column({
@@ -40,20 +41,57 @@ export class ServiceOrmEntity {
   })
   price: number | null;
 
+  /** Precio habitual (tachado) cuando hay oferta por tiempo limitado. */
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: priceNumberTransformer,
+  })
+  listPrice: number | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  promoEndsAt: Date | null;
+
   @Column({ type: 'varchar', length: 3, default: 'PEN' })
   currency: 'PEN';
 
   @Column({ type: 'varchar', nullable: true })
   coverImageUrl: string | null;
 
-  @Column({ type: 'boolean', default: true })
-  isActive: boolean;
+  @Column({ type: 'varchar', length: 24, default: 'BORRADOR' })
+  status: ServiceStatus;
+
+  @Column({ type: 'text', nullable: true })
+  moderationComment: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  submittedAt: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  reviewedAt: Date | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  reviewedByUserId: string | null;
 
   @Column({ type: 'int', default: 0 })
   viewCount: number;
 
   @Column({ type: 'simple-array', nullable: true })
   tags: string[] | null;
+
+  @Column({ type: 'varchar', length: 40, default: 'other' })
+  category: string;
+
+  @Column({ type: 'varchar', length: 32, default: 'digital' })
+  deliveryMode: string;
+
+  @Column({ type: 'varchar', length: 40, default: 'A coordinar' })
+  deliveryTime: string;
+
+  @Column({ type: 'varchar', length: 16, default: '0' })
+  revisionsIncluded: string;
 
   @ManyToOne(() => ProfileOrmEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'profileId' })

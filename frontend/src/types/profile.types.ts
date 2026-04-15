@@ -16,6 +16,19 @@ export interface Profile {
   rating?: number;
 }
 
+export interface PublicProfile {
+  id: string;
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  district: string | null;
+  hourlyRate: number | null;
+  isAvailable: boolean;
+  portfolioImages: string[] | null;
+  skills: Skill[];
+}
+
 export interface SearchFilters {
   skill?: string | string[];
   district?: string;

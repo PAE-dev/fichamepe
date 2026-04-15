@@ -1,4 +1,5 @@
 import { mockServices } from "@/data/mockServices";
+import { enrichService } from "@/lib/service-enrichment";
 import type { ServicesFeedResponse } from "@/types/service.types";
 
 type FetchFeedServicesParams = {
@@ -48,7 +49,7 @@ export async function fetchFeedServicesClient(
     const parsed = unwrapApiSuccess<ServicesFeedResponse>(json);
     return {
       ...parsed,
-      services: parsed.services,
+      services: parsed.services.map(enrichService),
     };
   } catch {
     return fallbackFromMock(params);
@@ -59,7 +60,7 @@ function fallbackFromMock(params: FetchFeedServicesParams): ServicesFeedResponse
   const limit = params.limit ?? 12;
   const offset = params.offset ?? 0;
   return {
-    services: mockServices.slice(offset, offset + limit),
+    services: mockServices.slice(offset, offset + limit).map(enrichService),
     total: mockServices.length,
   };
 }

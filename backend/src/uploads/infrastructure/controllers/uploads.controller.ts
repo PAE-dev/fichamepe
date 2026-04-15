@@ -47,7 +47,8 @@ export class UploadsController {
   private assertKeyOwnedByUser(userId: string, key: string): void {
     const prefixA = `uploads/avatar/${userId}/`;
     const prefixP = `uploads/portfolio/${userId}/`;
-    if (!key.startsWith(prefixA) && !key.startsWith(prefixP)) {
+    const prefixS = `uploads/service_cover/${userId}/`;
+    if (!key.startsWith(prefixA) && !key.startsWith(prefixP) && !key.startsWith(prefixS)) {
       throw new ForbiddenException('Clave no autorizada');
     }
   }

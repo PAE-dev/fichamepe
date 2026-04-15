@@ -10,6 +10,8 @@ export function useInfiniteScroll({
   enabled: boolean;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const onLoadMoreRef = useRef(onLoadMore);
+  onLoadMoreRef.current = onLoadMore;
 
   useEffect(() => {
     if (!enabled || !ref.current) return;
@@ -17,7 +19,7 @@ export function useInfiniteScroll({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
-          onLoadMore();
+          onLoadMoreRef.current();
         }
       },
       { rootMargin: "0px 0px 300px 0px" },
@@ -25,7 +27,7 @@ export function useInfiniteScroll({
 
     observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [enabled, onLoadMore]);
+  }, [enabled]);
 
   return ref;
 }

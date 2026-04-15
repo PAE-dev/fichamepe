@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -12,6 +13,7 @@ import {
   toServiceResponse,
   type ServiceResponse,
 } from '../mappers/service-response.mapper';
+import { assertTimedPromoValid } from '../service-promo.validation';
 
 @Injectable()
 export class UpdateServiceUseCase {
@@ -32,6 +34,32 @@ export class UpdateServiceUseCase {
     if (existing.userId !== userId) {
       throw new ForbiddenException('No puedes editar este servicio');
     }
+
+    const nextPrice = dto.price !== undefined ? dto.price : existing.price;
+    let nextList = existing.listPrice ?? null;
+    let nextPromo = existing.promoEndsAt ?? null;
+    if (dto.listPrice !== undefined) {
+      nextList = dto.listPrice;
+    }
+    if (dto.promoEndsAt !== undefined) {
+      nextPromo =
+        dto.promoEndsAt === null || dto.promoEndsAt === ''
+          ? null
+          : new Date(dto.promoEndsAt);
+    }
+    if (dto.listPrice === null || dto.promoEndsAt === null) {
+      nextList = null;
+      nextPromo = null;
+    }
+    assertTimedPromoValid(
+      {
+        price: nextPrice,
+        listPrice: nextList,
+        promoEndsAt: nextPromo,
+      },
+      { allowExpiredPersisted: true },
+    );
+
     const patch: Partial<Service> = {};
     if (dto.title !== undefined) {
       patch.title = dto.title;
@@ -45,11 +73,52 @@ export class UpdateServiceUseCase {
     if (dto.coverImageUrl !== undefined) {
       patch.coverImageUrl = dto.coverImageUrl;
     }
-    if (dto.isActive !== undefined) {
-      patch.isActive = dto.isActive;
+    if (dto.status !== undefined) {
+      if (dto.status === 'ACTIVA') {
+        throw new BadRequestException(
+          'Usa la acción de reactivar para volver a publicar una pausa',
+        );
+      }
+      if (dto.status === 'EN_REVISION') {
+        if (existing.status === 'REQUIERE_CAMBIOS') {
+          patch.status = 'EN_REVISION';
+          patch.submittedAt = new Date();
+          patch.reviewedAt = null;
+          patch.reviewedByUserId = null;
+          patch.moderationComment = null;
+        } else if (existing.status === 'EN_REVISION') {
+          // Guardar campos sin reenviar ni tocar fechas de moderación.
+        } else {
+          throw new BadRequestException(
+            'Usa la acción de publicar para enviar un borrador a revisión',
+          );
+        }
+      } else if (dto.status === 'REQUIERE_CAMBIOS') {
+        throw new BadRequestException(
+          'El estado de cambios solicitados solo lo puede definir un administrador',
+        );
+      } else {
+        patch.status = dto.status;
+      }
     }
     if (dto.tags !== undefined) {
       patch.tags = dto.tags;
+    }
+    if (dto.category !== undefined) {
+      patch.category = dto.category;
+    }
+    if (dto.deliveryMode !== undefined) {
+      patch.deliveryMode = dto.deliveryMode;
+    }
+    if (dto.deliveryTime !== undefined) {
+      patch.deliveryTime = dto.deliveryTime;
+    }
+    if (dto.revisionsIncluded !== undefined) {
+      patch.revisionsIncluded = dto.revisionsIncluded;
+    }
+    if (dto.listPrice !== undefined || dto.promoEndsAt !== undefined) {
+      patch.listPrice = nextList;
+      patch.promoEndsAt = nextPromo;
     }
     const updated = await this.services.update(id, patch);
     if (!updated) {

@@ -11,22 +11,16 @@ import { TopRatedSection } from "@/components/sections/TopRatedSection";
 import { NewArrivals } from "@/components/sections/NewArrivals";
 import { ComboDeals } from "@/components/sections/ComboDeals";
 import { ActivityToast } from "@/components/engagement/ActivityToast";
-import { SpinWheel } from "@/components/engagement/SpinWheel";
-import { fetchFeedServicesSafe } from "@/lib/api/services.api";
+import { fetchMergedHomeFeed } from "@/lib/api/services.api";
 import { HOME_MACRO_CATEGORIES } from "@/lib/constants";
+import { macroSlugForService } from "@/lib/service-macro-category";
 
 export default async function Home() {
-  const feed = await fetchFeedServicesSafe({ limit: 30, orderBy: "random" });
-  const services = feed.services;
+  const { services } = await fetchMergedHomeFeed(36);
   const counts = Object.fromEntries(HOME_MACRO_CATEGORIES.map((category) => [category.slug, 0]));
 
   for (const service of services) {
-    const normalized = (service.tags.join(" ") || "").toLowerCase();
-    for (const category of HOME_MACRO_CATEGORIES) {
-      if (normalized.includes(category.label.toLowerCase().split(" ")[0])) {
-        counts[category.slug] += 1;
-      }
-    }
+    counts[macroSlugForService(service)] += 1;
   }
 
   return (
@@ -44,7 +38,6 @@ export default async function Home() {
         <TopRatedSection services={services} />
         <NewArrivals services={services} />
         <ComboDeals services={services} />
-        <SpinWheel />
       </main>
 
       <BottomNav />

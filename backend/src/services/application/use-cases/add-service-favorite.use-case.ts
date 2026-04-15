@@ -18,7 +18,7 @@ export class AddServiceFavoriteUseCase {
 
   async execute(userId: string, serviceId: string): Promise<{ ok: true }> {
     const svc = await this.services.findById(serviceId);
-    if (!svc || !svc.isActive) {
+    if (!svc || svc.status !== 'ACTIVA') {
       throw new NotFoundException('Servicio no encontrado');
     }
     const exists = await this.favorites.exist({

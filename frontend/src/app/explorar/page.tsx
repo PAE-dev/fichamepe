@@ -24,11 +24,11 @@ import {
   type SkillRow,
   type SkillsGroupedByCategory,
 } from "@/lib/api/skills.api";
+import { HOME_MACRO_CATEGORIES, type MacroCategorySlug } from "@/lib/constants";
 import {
-  HOME_MACRO_CATEGORIES,
-  LIMA_DISTRICTS,
-  type MacroCategorySlug,
-} from "@/lib/constants";
+  macroSlugForWizardCategory,
+  serviceMatchesMacroSlug,
+} from "@/lib/service-macro-category";
 import type { ServicePublic } from "@/types/service.types";
 
 const MACRO_SLUG_SET = new Set<string>(
@@ -38,6 +38,17 @@ const MACRO_SLUG_SET = new Set<string>(
 const PRICE_MIN = 20;
 const PRICE_MAX = 120;
 const PAGE_SIZE = 12;
+
+function dedupeServicesById(services: ServicePublic[]): ServicePublic[] {
+  const seen = new Set<string>();
+  const out: ServicePublic[] = [];
+  for (const s of services) {
+    if (seen.has(s.id)) continue;
+    seen.add(s.id);
+    out.push(s);
+  }
+  return out;
+}
 
 function EmptySearchIllustration() {
   return (
@@ -71,8 +82,6 @@ function FiltersContent({
   onCategoryChange,
   selectedSkillIds,
   onSkillIdsChange,
-  districtKey,
-  onDistrictChange,
   availableOnly,
   onAvailableChange,
   maxHourly,
@@ -83,19 +92,18 @@ function FiltersContent({
   onCategoryChange: (key: string) => void;
   selectedSkillIds: string[];
   onSkillIdsChange: (ids: string[]) => void;
-  districtKey: string;
-  onDistrictChange: (key: string) => void;
   availableOnly: boolean;
   onAvailableChange: (v: boolean) => void;
   maxHourly: number;
   onMaxHourlyChange: (v: number) => void;
 }) {
   const skillsList: SkillRow[] = useMemo(() => {
-    if (!categoryKey) {
-      return skillsGrouped.flatMap((g) => g.skills);
+    const flat = skillsGrouped.flatMap((g) => g.skills);
+    if (!categoryKey || !MACRO_SLUG_SET.has(categoryKey)) {
+      return flat;
     }
-    const block = skillsGrouped.find((g) => g.category === categoryKey);
-    return block?.skills ?? [];
+    const macro = categoryKey as MacroCategorySlug;
+    return flat.filter((sk) => macroSlugForWizardCategory(sk.category) === macro);
   }, [skillsGrouped, categoryKey]);
   const filterLabelClass =
     "mb-3 text-[13px] font-semibold uppercase tracking-[0.06em] text-[#1A1A2E]";
@@ -117,10 +125,10 @@ function FiltersContent({
           onChange={(e) => onCategoryChange(e.target.value)}
           className="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/25"
         >
-          <option value="">Todas</option>
-          {skillsGrouped.map((g) => (
-            <option key={g.category} value={g.category}>
-              {g.category}
+          <option value="">Todas las categorías</option>
+          {HOME_MACRO_CATEGORIES.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.label}
             </option>
           ))}
         </select>
@@ -146,29 +154,6 @@ function FiltersContent({
             ))
           )}
         </CheckboxGroup>
-      </div>
-
-      <div className="mb-6 border-b border-[#F3F4F6] pb-6">
-        <label
-          id="district-label"
-          htmlFor="district-select"
-          className={filterLabelClass}
-        >
-          Distrito de Lima
-        </label>
-        <select
-          id="district-select"
-          aria-labelledby="district-label"
-          value={districtKey}
-          onChange={(e) => onDistrictChange(e.target.value)}
-          className="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/25"
-        >
-          {LIMA_DISTRICTS.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
       </div>
 
       <div className="mb-6 border-b border-[#F3F4F6] pb-6">
@@ -226,17 +211,16 @@ export default function ExplorarPage() {
   );
   const [categoryKey, setCategoryKey] = useState("");
   const [selectedSkillIds, setSelectedSkillIds] = useState<string[]>([]);
-  const [districtKey, setDistrictKey] = useState("Todos");
   const [availableOnly, setAvailableOnly] = useState(false);
   const [maxHourly, setMaxHourly] = useState(PRICE_MAX);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch] = useDebounce(searchInput, 400);
   const [offset, setOffset] = useState(0);
   const [services, setServices] = useState<ServicePublic[]>([]);
-  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [feedHasMore, setFeedHasMore] = useState(true);
 
   useEffect(() => {
     getAllSkills()
@@ -268,11 +252,6 @@ export default function ExplorarPage() {
     setOffset(0);
   };
 
-  const handleDistrictChange = (key: string) => {
-    setDistrictKey(key);
-    setOffset(0);
-  };
-
   const handleAvailableChange = (v: boolean) => {
     setAvailableOnly(v);
     setOffset(0);
@@ -283,6 +262,16 @@ export default function ExplorarPage() {
     setOffset(0);
   };
 
+  const skillNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const g of skillsGrouped) {
+      for (const sk of g.skills) {
+        m.set(sk.id, sk.name);
+      }
+    }
+    return m;
+  }, [skillsGrouped]);
+
   const filteredServices = useMemo(() => {
     return services.filter((service) => {
       const matchesSearch = debouncedSearch
@@ -290,8 +279,6 @@ export default function ExplorarPage() {
             .toLowerCase()
             .includes(debouncedSearch.toLowerCase())
         : true;
-      const matchesDistrict =
-        districtKey === "Todos" ? true : service.profile?.district === districtKey;
       const matchesAvailability = availableOnly
         ? service.profile?.isAvailable === true
         : true;
@@ -299,16 +286,19 @@ export default function ExplorarPage() {
       const matchesSkills =
         selectedSkillIds.length === 0
           ? true
-          : selectedSkillIds.some((skill) =>
-              service.tags.join(" ").toLowerCase().includes(skill.toLowerCase()),
-            );
-      const matchesCategory = categoryKey
-        ? service.tags.join(" ").toLowerCase().includes(categoryKey.toLowerCase())
-        : true;
+          : selectedSkillIds.some((id) => {
+              const name = skillNameById.get(id)?.toLowerCase();
+              if (!name) return false;
+              const hay = `${service.tags.join(" ")} ${service.title}`.toLowerCase();
+              return hay.includes(name);
+            });
+      const matchesCategory =
+        !categoryKey ||
+        (MACRO_SLUG_SET.has(categoryKey) &&
+          serviceMatchesMacroSlug(service, categoryKey as MacroCategorySlug));
 
       return (
         matchesSearch &&
-        matchesDistrict &&
         matchesAvailability &&
         matchesPrice &&
         matchesSkills &&
@@ -318,11 +308,11 @@ export default function ExplorarPage() {
   }, [
     services,
     debouncedSearch,
-    districtKey,
     availableOnly,
     maxHourly,
     selectedSkillIds,
     categoryKey,
+    skillNameById,
   ]);
 
   const loadServices = useCallback(
@@ -337,11 +327,22 @@ export default function ExplorarPage() {
           orderBy: "random",
           search: debouncedSearch || undefined,
         });
-        setServices((prev) => (append ? [...prev, ...res.services] : res.services));
-        setTotal(res.total);
+        setServices((prev) => {
+          if (!append) return dedupeServicesById(res.services);
+          const seen = new Set(prev.map((s) => s.id));
+          const merged = [...prev];
+          for (const s of res.services) {
+            if (seen.has(s.id)) continue;
+            seen.add(s.id);
+            merged.push(s);
+          }
+          return merged;
+        });
+        setFeedHasMore(res.services.length >= PAGE_SIZE);
       } catch (e) {
         setError(e);
         if (!append) setServices([]);
+        setFeedHasMore(false);
       } finally {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -355,7 +356,7 @@ export default function ExplorarPage() {
     void loadServices(false, 0);
   }, [debouncedSearch, loadServices]);
 
-  const canLoadMore = services.length < total;
+  const canLoadMore = feedHasMore && !error;
   const markerRef = useInfiniteScroll({
     enabled: canLoadMore && !isLoadingMore && !isLoading,
     onLoadMore: () => {
@@ -378,8 +379,6 @@ export default function ExplorarPage() {
       onCategoryChange={handleCategoryChange}
       selectedSkillIds={selectedSkillIds}
       onSkillIdsChange={handleSkillIdsChange}
-      districtKey={districtKey}
-      onDistrictChange={handleDistrictChange}
       availableOnly={availableOnly}
       onAvailableChange={handleAvailableChange}
       maxHourly={maxHourly}
@@ -400,8 +399,8 @@ export default function ExplorarPage() {
         />
       </div>
 
-      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4 py-6">
-        <aside className="hidden shrink-0 md:block md:w-[280px] md:border-r md:border-border md:pr-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 gap-6 px-4 py-6 lg:gap-8">
+        <aside className="hidden shrink-0 md:block md:w-[240px] md:border-r md:border-border md:pr-6 lg:w-[260px] lg:pr-8">
           <div className="sticky top-24">
             <h2 className="mb-6 text-sm font-semibold uppercase tracking-wider text-muted">
               Filtros
@@ -446,7 +445,7 @@ export default function ExplorarPage() {
             </Card>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
             {isLoading
               ? Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} />)
               : filteredServices.map((service) => (
@@ -464,7 +463,7 @@ export default function ExplorarPage() {
           ) : null}
 
           {isLoadingMore ? (
-            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
               {Array.from({ length: 3 }, (_, i) => (
                 <SkeletonCard key={i} />
               ))}

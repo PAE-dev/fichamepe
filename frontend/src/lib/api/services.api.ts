@@ -74,6 +74,20 @@ export async function fetchServiceById(id: string): Promise<ServicePublic> {
   return enrichService(unwrapApiSuccess<ServicePublic>(json));
 }
 
+export async function fetchServicesByProfileId(profileId: string): Promise<ServicePublic[]> {
+  const url = `${getApiBaseUrl()}/services/profile/${encodeURIComponent(profileId)}`;
+  const res = await fetch(url, {
+    next: { revalidate: 0 },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) {
+    throw new Error(`services/profile/${profileId} falló: ${res.status}`);
+  }
+  const json: unknown = await res.json();
+  const data = unwrapApiSuccess<{ services: ServicePublic[] }>(json);
+  return (data.services ?? []).map(enrichService);
+}
+
 export async function fetchFeedServicesSafe(
   params: FetchFeedServicesParams = {},
 ): Promise<ServicesFeedResponse> {
@@ -88,5 +102,37 @@ export async function fetchFeedServicesSafe(
       total: mockServices.length,
     };
   }
+}
+
+/**
+ * Feed de home: mezcla recientes + aleatorio (y popular si hace falta) para que no queden
+ * fuera categorías con pocos anuncios nuevos cuando el catálogo crece.
+ */
+export async function fetchMergedHomeFeed(maxItems = 36): Promise<{
+  services: ServicePublic[];
+}> {
+  const chunk = Math.min(20, Math.max(12, Math.ceil(maxItems / 2)));
+  const recent = await fetchFeedServicesSafe({ limit: chunk, orderBy: "recent" });
+  const random = await fetchFeedServicesSafe({ limit: chunk, orderBy: "random" });
+  const seen = new Set<string>();
+  const out: ServicePublic[] = [];
+  const pushUnique = (list: ServicePublic[]) => {
+    for (const s of list) {
+      if (out.length >= maxItems) return;
+      if (seen.has(s.id)) continue;
+      seen.add(s.id);
+      out.push(s);
+    }
+  };
+  pushUnique(recent.services);
+  pushUnique(random.services);
+  if (out.length < maxItems) {
+    const popular = await fetchFeedServicesSafe({
+      limit: maxItems - out.length,
+      orderBy: "popular",
+    });
+    pushUnique(popular.services);
+  }
+  return { services: out };
 }
 

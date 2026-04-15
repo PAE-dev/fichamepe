@@ -1,27 +1,37 @@
 import type { ConversationThread } from "@/types/conversation.types";
+import { MOCK_CONVERSATION_LOCAL_SELLER_ID } from "@/data/mock-conversation-ids";
 
 export const mockConversations: ConversationThread[] = [
   {
     id: "conv-tech-landing",
+    serviceId: "svc-002",
+    sellerUserId: MOCK_CONVERSATION_LOCAL_SELLER_ID,
+    buyerUserId: "user-camila-vega",
+    demoDefaultPerspective: "seller",
     participant: {
       id: "user-camila-vega",
       fullName: "Camila Vega",
       initials: "CV",
       avatarUrl: null,
     },
-    serviceTitle: "Landing page para marca personal",
+    serviceTitle: "Diseno logo y branding express para tu negocio",
+    serviceCoverImageUrl: "https://picsum.photos/seed/fichame-landing/144/144",
+    servicePrice: 90,
+    servicePreviousPrice: 112,
+    serviceCategory: "Diseno",
+    serviceDeliveryTime: "1-2 días",
     unreadCount: 2,
     messages: [
       {
         id: "msg-1",
         sender: "other",
-        text: "Hola, vi tu perfil. Necesito una landing para lanzar mi marca.",
+        text: "Hola, vi tu publicación de branding. Necesito identidad para lanzar mi marca.",
         createdAt: "2026-04-14T12:10:00.000Z",
       },
       {
         id: "msg-2",
         sender: "me",
-        text: "Hola Camila, claro. Te puedo ayudar con diseno y desarrollo.",
+        text: "Hola Camila, claro. Te armamos logo y piezas base sin drama.",
         createdAt: "2026-04-14T12:14:00.000Z",
       },
       {
@@ -40,13 +50,22 @@ export const mockConversations: ConversationThread[] = [
   },
   {
     id: "conv-design-reels",
+    serviceId: "svc-001",
+    sellerUserId: MOCK_CONVERSATION_LOCAL_SELLER_ID,
+    buyerUserId: "user-diego-rios",
+    demoDefaultPerspective: "seller",
     participant: {
       id: "user-diego-rios",
       fullName: "Diego Rios",
       initials: "DR",
       avatarUrl: null,
     },
-    serviceTitle: "Edicion de reels para Instagram",
+    serviceTitle: "Te edito reels de TikTok que retienen",
+    serviceCoverImageUrl: "https://picsum.photos/seed/fichame-reels/144/144",
+    servicePrice: 65,
+    servicePreviousPrice: 81,
+    serviceCategory: "Video",
+    serviceDeliveryTime: "1-2 días",
     unreadCount: 1,
     messages: [
       {
@@ -65,13 +84,22 @@ export const mockConversations: ConversationThread[] = [
   },
   {
     id: "conv-music-jingle",
+    serviceId: "svc-007",
+    sellerUserId: MOCK_CONVERSATION_LOCAL_SELLER_ID,
+    buyerUserId: "user-lucia-prado",
+    demoDefaultPerspective: "seller",
     participant: {
       id: "user-lucia-prado",
       fullName: "Lucia Prado",
       initials: "LP",
       avatarUrl: null,
     },
-    serviceTitle: "Jingle comercial de 20 segundos",
+    serviceTitle: "DJ para tonos y eventos privados",
+    serviceCoverImageUrl: "https://picsum.photos/seed/fichame-jingle/144/144",
+    servicePrice: 150,
+    servicePreviousPrice: 188,
+    serviceCategory: "DJ",
+    serviceDeliveryTime: "1-2 días",
     unreadCount: 0,
     messages: [
       {

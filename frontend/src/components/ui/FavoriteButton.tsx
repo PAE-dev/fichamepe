@@ -5,7 +5,14 @@ import { Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { useFavoritesStore } from "@/stores/favoritesStore";
 
-export function FavoriteButton({ serviceId }: { serviceId: string }) {
+export function FavoriteButton({
+  serviceId,
+  /** Sobre imagen de portada: círculo blanco sólido para que el corazón no se pierda. */
+  overlay = false,
+}: {
+  serviceId: string;
+  overlay?: boolean;
+}) {
   /** Debe leer `favorites` en el selector: si no, Zustand no se suscribe y no repinta al navegar. */
   const isFavoriteFromStore = useFavoritesStore((state) =>
     state.favorites.includes(serviceId),
@@ -42,13 +49,19 @@ export function FavoriteButton({ serviceId }: { serviceId: string }) {
         setBusy(true);
         void Promise.resolve(toggleFavorite(serviceId)).finally(() => setBusy(false));
       }}
-      className={`inline-flex size-8 items-center justify-center rounded-full border ${
-        isFavorite
-          ? "border-primary/40 bg-primary/10 text-primary"
-          : "border-border bg-white text-muted"
-      }`}
+      className={
+        overlay
+          ? `inline-flex size-9 items-center justify-center rounded-full border border-black/[0.12] bg-white/98 text-foreground shadow-[0_2px_12px_rgba(0,0,0,0.28)] backdrop-blur-sm ${
+              isFavorite ? "text-primary" : "text-gray-600"
+            }`
+          : `inline-flex size-8 items-center justify-center rounded-full border ${
+              isFavorite
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-white text-muted"
+            }`
+      }
     >
-      <Heart className={`size-4 ${isFavorite ? "fill-primary" : ""}`} aria-hidden />
+      <Heart className={`size-4 ${isFavorite ? "fill-current" : ""}`} aria-hidden />
     </motion.button>
   );
 }

@@ -33,15 +33,15 @@ export function DiscoveryFeed({
         <h2 className="text-2xl font-bold text-foreground">Servicios que no sabias que querias</h2>
       </header>
 
-      <div className="columns-1 gap-3 sm:columns-2 xl:columns-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {visibleItems.map((service) => (
-          <div key={service.id} className="mb-3 break-inside-avoid">
+          <div key={service.id} className="h-full min-h-0">
             <ServiceCard service={service} />
           </div>
         ))}
         {loading
           ? Array.from({ length: 6 }).map((_, idx) => (
-              <div key={`skeleton-${idx}`} className="mb-3 break-inside-avoid">
+              <div key={`skeleton-${idx}`} className="h-full min-h-0">
                 <SkeletonCard />
               </div>
             ))

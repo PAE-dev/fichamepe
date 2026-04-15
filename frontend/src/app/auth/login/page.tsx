@@ -1,7 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,6 +13,7 @@ import {
   parseApiErrorMessage,
   postLogin,
 } from "@/lib/api/auth.api";
+import { resolvePostLoginHref } from "@/lib/post-login-redirect";
 import { useAuthStore } from "@/store/auth.store";
 
 const loginSchema = z.object({
@@ -21,8 +23,9 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { openRegister, openForgotPassword } = useAuthModals();
   const login = useAuthStore((s) => s.login);
   const setAccessToken = useAuthStore((s) => s.setAccessToken);
@@ -45,7 +48,8 @@ export default function LoginPage() {
       void import("@/stores/favoritesStore").then(({ useFavoritesStore }) => {
         void useFavoritesStore.getState().syncFromApi();
       });
-      router.replace("/");
+      const from = searchParams.get("from");
+      router.replace(resolvePostLoginHref(user.role, from));
     } catch (e: unknown) {
       setFormError("root", {
         message: parseApiErrorMessage(
@@ -156,5 +160,28 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="relative flex min-h-full flex-1 flex-col items-center justify-center px-4 py-16">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.35]"
+        aria-hidden
+      >
+        <div className="absolute -left-32 top-20 h-72 w-72 rounded-full bg-primary/25 blur-3xl" />
+        <div className="absolute -right-24 top-40 h-80 w-80 rounded-full bg-accent/10 blur-3xl" />
+      </div>
+      <p className="relative text-sm text-muted">Cargando…</p>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

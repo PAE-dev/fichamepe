@@ -129,6 +129,14 @@ export class ProfileTypeOrmRepository implements IProfileRepository {
     return row ? toDomain(row) : null;
   }
 
+  async findById(id: string): Promise<Profile | null> {
+    const row = await this.profiles.findOne({
+      where: { id },
+      relations: ['user', 'skills'],
+    });
+    return row ? toDomain(row) : null;
+  }
+
   async search(filters: ProfileSearchFilters): Promise<ProfileSearchPage> {
     const page = Math.max(1, filters.page ?? 1);
     const limit = Math.min(100, Math.max(1, filters.limit ?? 12));

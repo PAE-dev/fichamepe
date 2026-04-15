@@ -16,7 +16,7 @@ export function CuentaShell({ children }: { children: ReactNode }) {
             <CuentaSidebarNav />
           </div>
         </aside>
-        <div className="min-w-0 flex-1 lg:max-w-2xl">{children}</div>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
     </main>
   );

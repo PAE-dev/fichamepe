@@ -2,7 +2,8 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
-  IsBoolean,
+  IsDateString,
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
@@ -11,26 +12,46 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
+import type { ServiceStatus } from '../../domain/entities/service.domain';
+
+const SERVICE_STATUSES: ServiceStatus[] = [
+  'ACTIVA',
+  'BORRADOR',
+  'PAUSADA',
+  'EN_REVISION',
+  'REQUIERE_CAMBIOS',
+];
 
 export class UpdateServiceBodyDto {
   @IsOptional()
   @IsString()
-  @MinLength(10)
+  @MinLength(5)
   @MaxLength(80)
   title?: string;
 
   @IsOptional()
   @IsString()
-  @MinLength(20)
-  @MaxLength(280)
+  @MinLength(80)
+  @MaxLength(600)
   description?: string;
 
   @IsOptional()
   @ValidateIf((_, v) => v !== null && v !== undefined)
   @Type(() => Number)
   @IsNumber()
-  @Min(0)
+  @Min(5)
   price?: number | null;
+
+  @IsOptional()
+  @ValidateIf((_, v) => v !== null && v !== undefined)
+  @Type(() => Number)
+  @IsNumber()
+  listPrice?: number | null;
+
+  @IsOptional()
+  @ValidateIf((_, v) => v !== null && v !== undefined && v !== '')
+  @IsDateString()
+  promoEndsAt?: string | null;
 
   @IsOptional()
   @ValidateIf((_, v) => v !== null && v !== undefined && v !== '')
@@ -39,13 +60,33 @@ export class UpdateServiceBodyDto {
   coverImageUrl?: string | null;
 
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
-
-  @IsOptional()
   @IsArray()
   @ArrayMaxSize(5)
   @IsString({ each: true })
-  @MaxLength(30, { each: true })
+  @MaxLength(20, { each: true })
   tags?: string[];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  category?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  deliveryMode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  deliveryTime?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  revisionsIncluded?: string;
+
+  @IsOptional()
+  @IsIn(SERVICE_STATUSES)
+  status?: ServiceStatus;
 }

@@ -16,12 +16,12 @@ export class GetServiceByIdUseCase {
   ) {}
 
   async execute(id: string): Promise<ServiceResponse> {
-    const found = await this.services.findById(id);
+    const found = await this.services.findActiveById(id);
     if (!found) {
       throw new NotFoundException('Servicio no encontrado');
     }
     await this.incrementView.execute(id);
-    const updated = await this.services.findById(id);
+    const updated = await this.services.findActiveById(id);
     if (!updated) {
       throw new NotFoundException('Servicio no encontrado');
     }

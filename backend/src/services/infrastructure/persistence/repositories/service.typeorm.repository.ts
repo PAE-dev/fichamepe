@@ -23,11 +23,22 @@ function toDomain(row: ServiceOrmEntity, withProfile: boolean): Service {
   s.title = row.title;
   s.description = row.description;
   s.price = row.price;
+  s.listPrice = row.listPrice ?? null;
+  s.promoEndsAt = row.promoEndsAt ?? null;
   s.currency = row.currency;
   s.coverImageUrl = row.coverImageUrl;
-  s.isActive = row.isActive;
+  s.status = row.status;
+  s.isActive = row.status === 'ACTIVA';
   s.viewCount = row.viewCount;
   s.tags = tagsFromOrm(row.tags);
+  s.category = row.category;
+  s.deliveryMode = row.deliveryMode;
+  s.deliveryTime = row.deliveryTime;
+  s.revisionsIncluded = row.revisionsIncluded;
+  s.moderationComment = row.moderationComment ?? null;
+  s.submittedAt = row.submittedAt ?? null;
+  s.reviewedAt = row.reviewedAt ?? null;
+  s.reviewedByUserId = row.reviewedByUserId ?? null;
   s.profileId = row.profile?.id ?? '';
   s.userId = row.owner?.id ?? '';
   s.createdAt = row.createdAt;
@@ -52,7 +63,7 @@ export class ServiceTypeOrmRepository implements IServiceRepository {
   ): Promise<{ services: Service[]; total: number }> {
     const baseQb = this.repo
       .createQueryBuilder('svc')
-      .where('svc.isActive = :active', { active: true });
+      .where('svc.status = :status', { status: 'ACTIVA' });
 
     const search = options.search?.trim();
     if (search) {
@@ -87,10 +98,9 @@ export class ServiceTypeOrmRepository implements IServiceRepository {
     if (options.orderBy === 'recent') {
       idsQb.orderBy('svc.createdAt', 'DESC');
     } else if (options.orderBy === 'popular') {
-      idsQb.orderBy('svc.viewCount', 'DESC').addOrderBy(
-        'svc.createdAt',
-        'DESC',
-      );
+      idsQb
+        .orderBy('svc.viewCount', 'DESC')
+        .addOrderBy('svc.createdAt', 'DESC');
     } else {
       idsQb.orderBy('RANDOM()');
     }
@@ -121,8 +131,17 @@ export class ServiceTypeOrmRepository implements IServiceRepository {
     const rows = await this.repo.find({
       where: {
         profile: { id: profileId },
-        isActive: true,
+        status: 'ACTIVA',
       },
+      relations: ['profile', 'owner'],
+      order: { createdAt: 'DESC' },
+    });
+    return rows.map((r) => toDomain(r, true));
+  }
+
+  async findByUserId(userId: string): Promise<Service[]> {
+    const rows = await this.repo.find({
+      where: { owner: { id: userId } },
       relations: ['profile', 'owner'],
       order: { createdAt: 'DESC' },
     });
@@ -132,6 +151,14 @@ export class ServiceTypeOrmRepository implements IServiceRepository {
   async findById(id: string): Promise<Service | null> {
     const row = await this.repo.findOne({
       where: { id },
+      relations: ['profile', 'owner'],
+    });
+    return row ? toDomain(row, true) : null;
+  }
+
+  async findActiveById(id: string): Promise<Service | null> {
+    const row = await this.repo.findOne({
+      where: { id, status: 'ACTIVA' },
       relations: ['profile', 'owner'],
     });
     return row ? toDomain(row, true) : null;
@@ -152,16 +179,35 @@ export class ServiceTypeOrmRepository implements IServiceRepository {
       .map((r) => toDomain(r, true));
   }
 
+  async findReviewQueue(): Promise<Service[]> {
+    const rows = await this.repo.find({
+      where: { status: 'EN_REVISION' },
+      relations: ['profile', 'owner'],
+      order: { submittedAt: 'DESC', createdAt: 'DESC' },
+    });
+    return rows.map((r) => toDomain(r, true));
+  }
+
   async create(data: Partial<Service>): Promise<Service> {
     const row = this.repo.create({
       title: data.title!,
       description: data.description!,
       price: data.price ?? null,
+      listPrice: data.listPrice ?? null,
+      promoEndsAt: data.promoEndsAt ?? null,
       currency: data.currency ?? 'PEN',
       coverImageUrl: data.coverImageUrl ?? null,
-      isActive: data.isActive ?? true,
+      status: data.status ?? 'BORRADOR',
       viewCount: data.viewCount ?? 0,
       tags: data.tags?.length ? data.tags : [],
+      category: data.category ?? 'other',
+      deliveryMode: data.deliveryMode ?? 'digital',
+      deliveryTime: data.deliveryTime ?? 'A coordinar',
+      revisionsIncluded: data.revisionsIncluded ?? '0',
+      moderationComment: data.moderationComment ?? null,
+      submittedAt: data.submittedAt ?? null,
+      reviewedAt: data.reviewedAt ?? null,
+      reviewedByUserId: data.reviewedByUserId ?? null,
       profile: { id: data.profileId } as ProfileOrmEntity,
       owner: { id: data.userId } as UserOrmEntity,
     });
@@ -190,17 +236,47 @@ export class ServiceTypeOrmRepository implements IServiceRepository {
     if (data.price !== undefined) {
       row.price = data.price;
     }
+    if (data.listPrice !== undefined) {
+      row.listPrice = data.listPrice;
+    }
+    if (data.promoEndsAt !== undefined) {
+      row.promoEndsAt = data.promoEndsAt;
+    }
     if (data.currency !== undefined) {
       row.currency = data.currency;
     }
     if (data.coverImageUrl !== undefined) {
       row.coverImageUrl = data.coverImageUrl;
     }
-    if (data.isActive !== undefined) {
-      row.isActive = data.isActive;
+    if (data.status !== undefined) {
+      row.status = data.status;
     }
     if (data.tags !== undefined) {
       row.tags = data.tags;
+    }
+    if (data.category !== undefined) {
+      row.category = data.category;
+    }
+    if (data.deliveryMode !== undefined) {
+      row.deliveryMode = data.deliveryMode;
+    }
+    if (data.deliveryTime !== undefined) {
+      row.deliveryTime = data.deliveryTime;
+    }
+    if (data.revisionsIncluded !== undefined) {
+      row.revisionsIncluded = data.revisionsIncluded;
+    }
+    if (data.moderationComment !== undefined) {
+      row.moderationComment = data.moderationComment;
+    }
+    if (data.submittedAt !== undefined) {
+      row.submittedAt = data.submittedAt;
+    }
+    if (data.reviewedAt !== undefined) {
+      row.reviewedAt = data.reviewedAt;
+    }
+    if (data.reviewedByUserId !== undefined) {
+      row.reviewedByUserId = data.reviewedByUserId;
     }
     await this.repo.save(row);
     const reloaded = await this.repo.findOne({

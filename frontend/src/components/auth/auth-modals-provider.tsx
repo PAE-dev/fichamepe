@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useMemo, useState, type ReactNode } from "react";
 import { useOverlayState } from "@heroui/react";
 import { AuthModalsContext } from "@/components/auth/auth-modals-context";
 import { ForgotPasswordModal } from "@/components/auth/ForgotPasswordModal";
@@ -48,7 +48,9 @@ export function AuthModalsProvider({ children }: { children: ReactNode }) {
     <AuthModalsContext.Provider value={value}>
       {children}
       <ForgotPasswordModal state={forgotPasswordState} />
-      <LoginModal state={loginState} />
+      <Suspense fallback={null}>
+        <LoginModal state={loginState} />
+      </Suspense>
       <RegisterModal
         state={registerState}
         initialRole={registerInitialRole}

@@ -14,6 +14,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { AdminModule } from './admin/admin.module';
 import { ServicesModule } from './services/services.module';
+import { ServiceReportsModule } from './service-reports/service-reports.module';
 import { buildTypeOrmOptions } from './database/typeorm-options.factory';
 import { validateEnv } from './common/config/env.validation';
 import { LoggerModule } from './common/logger/logger.module';
@@ -49,6 +50,7 @@ import { LoggerModule } from './common/logger/logger.module';
     UploadsModule,
     AdminModule,
     ServicesModule,
+    ServiceReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

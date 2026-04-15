@@ -40,15 +40,26 @@ async function main(): Promise<void> {
     for (let i = 0; i < SERVICE_SEED_DATA.length; i++) {
       const def = SERVICE_SEED_DATA[i];
       const profile = profiles[i % profiles.length];
+      const withPromo = i % 3 === 0;
+      const listPrice = withPromo ? Math.round(def.price * 1.22) : null;
+      const promoEndsAt = withPromo
+        ? new Date(Date.now() + ((i % 4) + 1) * 3_600_000)
+        : null;
       const row = serviceRepo.create({
         title: def.title,
         description: def.description,
         price: def.price,
+        listPrice,
+        promoEndsAt,
         currency: 'PEN',
         coverImageUrl: null,
-        isActive: true,
+        status: 'ACTIVA',
         viewCount: Math.floor(Math.random() * 40),
         tags: def.tags,
+        category: 'other',
+        deliveryMode: 'digital',
+        deliveryTime: '1-2 días',
+        revisionsIncluded: '1',
         profile,
         owner: profile.user,
       });

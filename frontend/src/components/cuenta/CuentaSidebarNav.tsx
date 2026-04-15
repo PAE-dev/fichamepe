@@ -7,9 +7,14 @@ import { useAuthStore } from "@/store/auth.store";
 
 const CUENTA_LINKS = [
   { href: "/cuenta/perfil", label: "Editar perfil", match: "/cuenta/perfil" },
-  { href: "/dashboard?seccion=configuracion", label: "Configuración", match: null },
-  { href: "/dashboard?seccion=publicaciones", label: "Mis publicaciones", match: null },
-  { href: "/dashboard?seccion=solicitudes-aprobadas", label: "Solicitudes aprobadas", match: null },
+  { href: "/skills/new", label: "Nueva habilidad", match: "/skills/new" },
+  { href: "/cuenta/configuracion", label: "Configuración", match: "/cuenta/configuracion" },
+  { href: "/cuenta/publicaciones", label: "Mis publicaciones", match: "/cuenta/publicaciones" },
+  {
+    href: "/cuenta/publicaciones?filtro=REQUIERE_CAMBIOS",
+    label: "Correcciones pendientes",
+    match: "/cuenta/publicaciones",
+  },
 ] as const;
 
 export function CuentaSidebarNav() {

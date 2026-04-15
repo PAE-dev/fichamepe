@@ -3,13 +3,17 @@
 CREATE TABLE IF NOT EXISTS "service" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
   "title" character varying(80) NOT NULL,
-  "description" character varying(280) NOT NULL,
+  "description" character varying(600) NOT NULL,
   "price" numeric(10, 2),
   "currency" character varying(3) NOT NULL DEFAULT 'PEN',
   "coverImageUrl" character varying,
-  "isActive" boolean NOT NULL DEFAULT true,
+  "status" character varying(16) NOT NULL DEFAULT 'BORRADOR',
   "viewCount" integer NOT NULL DEFAULT 0,
   "tags" text,
+  "category" character varying(40) NOT NULL DEFAULT 'other',
+  "deliveryMode" character varying(32) NOT NULL DEFAULT 'digital',
+  "deliveryTime" character varying(40) NOT NULL DEFAULT 'A coordinar',
+  "revisionsIncluded" character varying(16) NOT NULL DEFAULT '0',
   "profileId" uuid NOT NULL,
   "userId" uuid NOT NULL,
   "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
@@ -19,6 +23,6 @@ CREATE TABLE IF NOT EXISTS "service" (
   CONSTRAINT "FK_service_user" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS "IDX_service_is_active" ON "service" ("isActive");
+CREATE INDEX IF NOT EXISTS "IDX_service_status" ON "service" ("status");
 CREATE INDEX IF NOT EXISTS "IDX_service_view_count" ON "service" ("viewCount");
 CREATE INDEX IF NOT EXISTS "IDX_service_created_at" ON "service" ("createdAt");

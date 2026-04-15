@@ -18,7 +18,9 @@ export function NewArrivals({ services }: { services: ServicePublic[] }) {
       </header>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
         {latest.map((service) => (
-          <ServiceCard key={service.id} service={service} />
+          <div key={service.id} className="h-full min-h-0">
+            <ServiceCard service={service} />
+          </div>
         ))}
       </div>
     </section>

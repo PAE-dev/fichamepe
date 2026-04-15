@@ -8,6 +8,7 @@ import {
   toServiceResponse,
   type ServiceResponse,
 } from '../mappers/service-response.mapper';
+import { assertTimedPromoValid } from '../service-promo.validation';
 
 const MAX_SERVICES_PER_PROFILE = 10;
 
@@ -36,14 +37,35 @@ export class CreateServiceUseCase {
         `Solo puedes tener hasta ${MAX_SERVICES_PER_PROFILE} servicios activos o guardados`,
       );
     }
+    const listPrice = dto.listPrice ?? null;
+    const promoEndsAt =
+      dto.promoEndsAt != null && String(dto.promoEndsAt).trim() !== ''
+        ? new Date(dto.promoEndsAt)
+        : null;
+    assertTimedPromoValid({
+      price: dto.price ?? null,
+      listPrice,
+      promoEndsAt,
+    });
+    if (dto.status && dto.status !== 'BORRADOR') {
+      throw new BadRequestException(
+        'Los servicios nuevos solo se pueden crear como borrador',
+      );
+    }
     const created = await this.services.create({
       title: dto.title,
       description: dto.description,
       price: dto.price ?? null,
+      listPrice,
+      promoEndsAt,
       currency: 'PEN',
       coverImageUrl: dto.coverImageUrl ?? null,
-      isActive: true,
+      status: dto.status ?? 'BORRADOR',
       tags: dto.tags ?? [],
+      category: dto.category,
+      deliveryMode: dto.deliveryMode,
+      deliveryTime: dto.deliveryTime,
+      revisionsIncluded: dto.revisionsIncluded,
       profileId: profile.id,
       userId,
     });

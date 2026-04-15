@@ -23,11 +23,14 @@ import { DeleteServiceUseCase } from '../../application/use-cases/delete-service
 import { GetFeedServicesUseCase } from '../../application/use-cases/get-feed-services.use-case';
 import { GetServiceByIdUseCase } from '../../application/use-cases/get-service-by-id.use-case';
 import { GetServicesByProfileUseCase } from '../../application/use-cases/get-services-by-profile.use-case';
+import { GetMyServiceByIdUseCase } from '../../application/use-cases/get-my-service-by-id.use-case';
 import { ListUserFavoriteIdsUseCase } from '../../application/use-cases/list-user-favorite-ids.use-case';
 import { ListUserFavoritesUseCase } from '../../application/use-cases/list-user-favorites.use-case';
+import { ListMyServicesUseCase } from '../../application/use-cases/list-my-services.use-case';
 import { RemoveServiceFavoriteUseCase } from '../../application/use-cases/remove-service-favorite.use-case';
 import { ToggleServiceActiveUseCase } from '../../application/use-cases/toggle-service-active.use-case';
 import { UpdateServiceUseCase } from '../../application/use-cases/update-service.use-case';
+import { SetServiceStatusUseCase } from '../../application/use-cases/set-service-status.use-case';
 
 @Controller('services')
 export class ServicesController {
@@ -41,8 +44,11 @@ export class ServicesController {
     private readonly deleteService: DeleteServiceUseCase,
     private readonly listFavoriteIds: ListUserFavoriteIdsUseCase,
     private readonly listFavorites: ListUserFavoritesUseCase,
+    private readonly listMyServices: ListMyServicesUseCase,
+    private readonly getMyServiceById: GetMyServiceByIdUseCase,
     private readonly addFavorite: AddServiceFavoriteUseCase,
     private readonly removeFavorite: RemoveServiceFavoriteUseCase,
+    private readonly setStatus: SetServiceStatusUseCase,
   ) {}
 
   @Get('feed')
@@ -57,9 +63,7 @@ export class ServicesController {
   }
 
   @Get('profile/:profileId')
-  byProfile(
-    @Param('profileId', new ParseUUIDPipe()) profileId: string,
-  ) {
+  byProfile(@Param('profileId', new ParseUUIDPipe()) profileId: string) {
     return this.getByProfile.execute(profileId);
   }
 
@@ -73,6 +77,21 @@ export class ServicesController {
   @UseGuards(JwtAuthGuard)
   favorites(@CurrentUser() user: RequestUser) {
     return this.listFavorites.execute(user.userId);
+  }
+
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  myServices(@CurrentUser() user: RequestUser) {
+    return this.listMyServices.execute(user.userId);
+  }
+
+  @Get('mine/:id')
+  @UseGuards(JwtAuthGuard)
+  myServiceById(
+    @CurrentUser() user: RequestUser,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    return this.getMyServiceById.execute(id, user.userId);
   }
 
   @Post('favorites')
@@ -121,6 +140,33 @@ export class ServicesController {
     @CurrentUser() user: RequestUser,
   ) {
     return this.toggleActive.execute(id, user.userId);
+  }
+
+  @Patch(':id/pause')
+  @UseGuards(JwtAuthGuard)
+  pause(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.setStatus.execute(id, user.userId, 'PAUSADA');
+  }
+
+  @Patch(':id/reactivate')
+  @UseGuards(JwtAuthGuard)
+  reactivate(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.setStatus.execute(id, user.userId, 'ACTIVA');
+  }
+
+  @Patch(':id/publish')
+  @UseGuards(JwtAuthGuard)
+  publish(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.setStatus.execute(id, user.userId, 'EN_REVISION');
   }
 
   @Delete(':id')

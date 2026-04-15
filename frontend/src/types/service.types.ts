@@ -16,6 +16,13 @@ export type ServiceBadgeKey =
   | "premium"
   | "bestSeller";
 
+export type ServiceStatus =
+  | "ACTIVA"
+  | "BORRADOR"
+  | "PAUSADA"
+  | "EN_REVISION"
+  | "REQUIERE_CAMBIOS";
+
 export type ServicePublic = {
   id: string;
   title: string;
@@ -24,9 +31,18 @@ export type ServicePublic = {
   previousPrice?: number | null;
   currency: "PEN";
   coverImageUrl: string | null;
+  status: ServiceStatus;
   isActive: boolean;
   viewCount: number;
   tags: string[];
+  category: string;
+  deliveryMode: string;
+  deliveryTime: string;
+  revisionsIncluded: string;
+  moderationComment?: string | null;
+  submittedAt?: string | null;
+  reviewedAt?: string | null;
+  reviewedByUserId?: string | null;
   profileId: string;
   userId: string;
   createdAt: string;
