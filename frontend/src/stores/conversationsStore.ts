@@ -1,8 +1,12 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { mockConversations } from "@/data/mockConversations";
+import {
+  createConversation,
+  fetchConversationMessages,
+  fetchConversations,
+  postConversationMessage,
+} from "@/lib/api/conversations.api";
 import { useAuthStore } from "@/store/auth.store";
 import type { ConversationMessage, ConversationThread } from "@/types/conversation.types";
 
@@ -17,7 +21,7 @@ type ConversationsState = {
   closeDockConversation: () => void;
   setDockCollapsed: (collapsed: boolean) => void;
   markConversationRead: (conversationId: string) => void;
-  sendMessage: (conversationId: string, text: string) => void;
+  sendMessage: (conversationId: string, text: string) => Promise<void>;
   openOrCreateConversationFromService: (payload: {
     serviceId: string;
     serviceTitle: string;
@@ -31,8 +35,12 @@ type ConversationsState = {
       fullName: string;
       avatarUrl?: string | null;
     };
-  }) => void;
+  }) => Promise<void>;
   unreadTotal: () => number;
+  syncFromApi: () => Promise<void>;
+  loadMessagesForConversation: (conversationId: string) => Promise<void>;
+  ingestRemoteMessage: (conversationId: string, message: ConversationMessage) => void;
+  reset: () => void;
 };
 
 function markRead(conversations: ConversationThread[], conversationId: string): ConversationThread[] {
@@ -49,165 +57,178 @@ function withSortedConversations(conversations: ConversationThread[]): Conversat
   });
 }
 
-function buildMessage(conversationId: string, text: string): ConversationMessage {
-  return {
-    id: `msg-${conversationId}-${Date.now()}`,
-    sender: "me",
-    text,
-    createdAt: new Date().toISOString(),
-  };
-}
-
-function initialsFromName(fullName: string): string {
-  const cleaned = fullName.trim();
-  if (!cleaned) return "US";
-  const parts = cleaned.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) {
-    return `${parts[0]!.slice(0, 1)}${parts[1]!.slice(0, 1)}`.toUpperCase();
+function mergeThreadPreservingMessages(
+  prev: ConversationThread | undefined,
+  next: ConversationThread,
+): ConversationThread {
+  if (!prev) return next;
+  if (prev.messages.length > next.messages.length) {
+    return {
+      ...next,
+      messages: prev.messages,
+    };
   }
-  return cleaned.slice(0, 2).toUpperCase();
+  return next;
 }
 
-export const useConversationsStore = create<ConversationsState>()(
-  persist(
-    (set, get) => ({
-      conversations: withSortedConversations(mockConversations),
-      activeConversationId: mockConversations[0]?.id ?? null,
+export const useConversationsStore = create<ConversationsState>((set, get) => ({
+  conversations: [],
+  activeConversationId: null,
+  dockConversationId: null,
+  isDockCollapsed: false,
+
+  reset: () =>
+    set({
+      conversations: [],
+      activeConversationId: null,
       dockConversationId: null,
       isDockCollapsed: false,
-      setActiveConversation: (conversationId) =>
-        set((state) => ({
-          conversations: markRead(state.conversations, conversationId),
-          activeConversationId: conversationId,
-        })),
-      clearActiveConversation: () => set({ activeConversationId: null }),
-      openDockConversation: (conversationId) =>
-        set((state) => ({
-          conversations: markRead(state.conversations, conversationId),
-          activeConversationId: conversationId,
-          dockConversationId: conversationId,
-          isDockCollapsed: false,
-        })),
-      closeDockConversation: () =>
-        set({
-          dockConversationId: null,
-          isDockCollapsed: false,
-        }),
-      setDockCollapsed: (collapsed) => set({ isDockCollapsed: collapsed }),
-      markConversationRead: (conversationId) =>
-        set((state) => ({
-          conversations: markRead(state.conversations, conversationId),
-        })),
-      sendMessage: (conversationId, text) => {
-        const cleaned = text.trim();
-        if (!cleaned) return;
-        set((state) => {
-          const conversations = state.conversations.map((conversation) => {
-            if (conversation.id !== conversationId) return conversation;
-            return {
-              ...conversation,
-              messages: [...conversation.messages, buildMessage(conversationId, cleaned)],
-            };
-          });
-          return {
-            conversations: withSortedConversations(conversations),
-            activeConversationId: conversationId,
-          };
-        });
-      },
-      openOrCreateConversationFromService: ({
-        serviceId,
-        serviceTitle,
-        serviceCoverImageUrl,
-        servicePrice,
-        servicePreviousPrice,
-        serviceCategory,
-        serviceDeliveryTime,
-        participant,
-      }) =>
-        set((state) => {
-          const existing = state.conversations.find(
-            (conversation) =>
-              conversation.serviceId === serviceId &&
-              conversation.participant.id === participant.id,
-          );
-          if (existing) {
-            const uid = useAuthStore.getState().user?.id;
-            const needsPatch = Boolean(uid) && (!existing.sellerUserId || !existing.buyerUserId);
-            const patched: ConversationThread = {
-              ...existing,
-              ...(needsPatch
-                ? {
-                    serviceId: existing.serviceId ?? serviceId,
-                    sellerUserId: existing.sellerUserId ?? participant.id,
-                    buyerUserId: existing.buyerUserId ?? uid,
-                  }
-                : {}),
-              serviceCoverImageUrl:
-                existing.serviceCoverImageUrl ?? serviceCoverImageUrl ?? null,
-              servicePrice: existing.servicePrice ?? servicePrice ?? null,
-              servicePreviousPrice:
-                existing.servicePreviousPrice ?? servicePreviousPrice ?? null,
-              serviceCategory: existing.serviceCategory ?? serviceCategory ?? null,
-              serviceDeliveryTime:
-                existing.serviceDeliveryTime ?? serviceDeliveryTime ?? null,
-            };
-            const conversations = state.conversations.map((c) =>
-              c.id === patched.id ? patched : c,
-            );
-            return {
-              conversations: markRead(conversations, patched.id),
-              activeConversationId: patched.id,
-              dockConversationId: patched.id,
-              isDockCollapsed: false,
-            };
-          }
-
-          const conversationId = `conv-${serviceId}`;
-          const buyerUserId = useAuthStore.getState().user?.id ?? undefined;
-          const newConversation: ConversationThread = {
-            id: conversationId,
-            serviceId,
-            sellerUserId: participant.id,
-            buyerUserId,
-            participant: {
-              id: participant.id,
-              fullName: participant.fullName,
-              initials: initialsFromName(participant.fullName),
-              avatarUrl: participant.avatarUrl ?? null,
-            },
-            serviceTitle,
-            serviceCoverImageUrl: serviceCoverImageUrl ?? null,
-            servicePrice: servicePrice ?? null,
-            servicePreviousPrice: servicePreviousPrice ?? null,
-            serviceCategory: serviceCategory ?? null,
-            serviceDeliveryTime: serviceDeliveryTime ?? null,
-            unreadCount: 0,
-            messages: [
-              {
-                id: `msg-${conversationId}-init`,
-                sender: "me",
-                text: `Hola ${participant.fullName.split(" ")[0] ?? "!"}, vi tu publicación "${serviceTitle}" y me gustaría conversar sobre el servicio.`,
-                createdAt: new Date().toISOString(),
-              },
-            ],
-          };
-
-          const conversations = withSortedConversations([
-            newConversation,
-            ...state.conversations,
-          ]);
-          return {
-            conversations,
-            activeConversationId: conversationId,
-            dockConversationId: conversationId,
-            isDockCollapsed: false,
-          };
-        }),
-      unreadTotal: () =>
-        get().conversations.reduce((total, conversation) => total + conversation.unreadCount, 0),
     }),
-    { name: "fichame-conversations" },
-  ),
-);
 
+  syncFromApi: async () => {
+    if (!useAuthStore.getState().accessToken) return;
+    try {
+      const list = await fetchConversations();
+      set((state) => {
+        const merged = list.map((thread) => {
+          const prev = state.conversations.find((c) => c.id === thread.id);
+          return mergeThreadPreservingMessages(prev, thread);
+        });
+        const active = state.activeConversationId;
+        const still = active && merged.some((c) => c.id === active);
+        return {
+          conversations: withSortedConversations(merged),
+          activeConversationId: still ? active : merged[0]?.id ?? null,
+        };
+      });
+    } catch {
+      /* evita romper bootstrap si el backend no está disponible */
+    }
+  },
+
+  loadMessagesForConversation: async (conversationId: string) => {
+    if (!useAuthStore.getState().accessToken) return;
+    try {
+      const messages = await fetchConversationMessages(conversationId);
+      set((state) => ({
+        conversations: state.conversations.map((c) =>
+          c.id === conversationId ? { ...c, messages } : c,
+        ),
+      }));
+    } catch {
+      /* silencioso: la UI sigue mostrando lo que hubiera */
+    }
+  },
+
+  ingestRemoteMessage: (conversationId, message) => {
+    set((state) => ({
+      conversations: withSortedConversations(
+        state.conversations.map((c) => {
+          if (c.id !== conversationId) return c;
+          if (c.messages.some((m) => m.id === message.id)) return c;
+          return {
+            ...c,
+            messages: [...c.messages, message].sort((a, b) =>
+              a.createdAt.localeCompare(b.createdAt),
+            ),
+          };
+        }),
+      ),
+    }));
+  },
+
+  setActiveConversation: (conversationId) => {
+    set((state) => ({
+      conversations: markRead(state.conversations, conversationId),
+      activeConversationId: conversationId,
+    }));
+    void get().loadMessagesForConversation(conversationId);
+  },
+
+  clearActiveConversation: () => set({ activeConversationId: null }),
+
+  openDockConversation: (conversationId) => {
+    set((state) => ({
+      conversations: markRead(state.conversations, conversationId),
+      activeConversationId: conversationId,
+      dockConversationId: conversationId,
+      isDockCollapsed: false,
+    }));
+    void get().loadMessagesForConversation(conversationId);
+  },
+
+  closeDockConversation: () =>
+    set({
+      dockConversationId: null,
+      isDockCollapsed: false,
+    }),
+
+  setDockCollapsed: (collapsed) => set({ isDockCollapsed: collapsed }),
+
+  markConversationRead: (conversationId) =>
+    set((state) => ({
+      conversations: markRead(state.conversations, conversationId),
+    })),
+
+  sendMessage: async (conversationId, text) => {
+    const cleaned = text.trim();
+    if (!cleaned) return;
+    const saved = await postConversationMessage(conversationId, cleaned);
+    set((state) => ({
+      conversations: withSortedConversations(
+        state.conversations.map((c) => {
+          if (c.id !== conversationId) return c;
+          if (c.messages.some((m) => m.id === saved.id)) return c;
+          return {
+            ...c,
+            messages: [...c.messages, saved].sort((a, b) =>
+              a.createdAt.localeCompare(b.createdAt),
+            ),
+          };
+        }),
+      ),
+      activeConversationId: conversationId,
+    }));
+  },
+
+  openOrCreateConversationFromService: async ({
+    serviceId,
+    serviceTitle,
+    serviceCoverImageUrl,
+    servicePrice,
+    servicePreviousPrice,
+    serviceCategory,
+    serviceDeliveryTime,
+    participant,
+  }) => {
+    const thread = await createConversation({ serviceId });
+    const patched: ConversationThread = {
+      ...thread,
+      serviceTitle: thread.serviceTitle || serviceTitle,
+      serviceCoverImageUrl: thread.serviceCoverImageUrl ?? serviceCoverImageUrl ?? null,
+      servicePrice: thread.servicePrice ?? servicePrice ?? null,
+      servicePreviousPrice: thread.servicePreviousPrice ?? servicePreviousPrice ?? null,
+      serviceCategory: thread.serviceCategory ?? serviceCategory ?? null,
+      serviceDeliveryTime: thread.serviceDeliveryTime ?? serviceDeliveryTime ?? null,
+      participant: {
+        ...thread.participant,
+        fullName: thread.participant.fullName || participant.fullName,
+        avatarUrl: thread.participant.avatarUrl ?? participant.avatarUrl ?? null,
+      },
+    };
+
+    set((state) => {
+      const without = state.conversations.filter((c) => c.id !== patched.id);
+      return {
+        conversations: withSortedConversations([patched, ...without]),
+        activeConversationId: patched.id,
+        dockConversationId: patched.id,
+        isDockCollapsed: false,
+      };
+    });
+    void get().loadMessagesForConversation(patched.id);
+  },
+
+  unreadTotal: () =>
+    get().conversations.reduce((total, conversation) => total + conversation.unreadCount, 0),
+}));

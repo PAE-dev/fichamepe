@@ -28,12 +28,16 @@ export function ChatDock() {
 
   const perspective = getConversationPerspective(conversation, userId);
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const cleaned = draft.trim();
     if (!cleaned) return;
-    sendMessage(conversation.id, cleaned);
-    setDraft("");
+    try {
+      await sendMessage(conversation.id, cleaned);
+      setDraft("");
+    } catch {
+      /* el interceptor de axios ya maneja 401; otros errores se ignoran aquí */
+    }
   };
 
   return (

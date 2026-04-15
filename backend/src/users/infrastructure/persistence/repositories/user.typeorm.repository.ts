@@ -8,6 +8,11 @@ import type {
   UserUpdatePatch,
 } from '../../../domain/repositories';
 import { UserOrmEntity } from '../entities/user.orm-entity';
+import { generateReferralCode } from '../../utils/referral-code.generator';
+
+function normalizeReferralCodeInput(code: string): string {
+  return code.trim().toUpperCase();
+}
 
 function toDomain(row: UserOrmEntity): User {
   const u = new User();
@@ -20,6 +25,11 @@ function toDomain(row: UserOrmEntity): User {
   u.isPro = row.isPro;
   u.proExpiresAt = row.proExpiresAt;
   u.tokenBalance = row.tokenBalance;
+  u.referralCode = row.referralCode;
+  u.referredByUserId = row.referredByUserId ?? null;
+  u.referralMigrationCredits = row.referralMigrationCredits ?? 0;
+  u.referralSlotsEarned = row.referralSlotsEarned ?? 0;
+  u.purchasedPublicationSlots = row.purchasedPublicationSlots ?? 0;
   u.createdAt = row.createdAt;
   u.updatedAt = row.updatedAt;
   return u;
@@ -43,12 +53,55 @@ export class UserTypeOrmRepository implements IUserRepository {
     return row ? toDomain(row) : null;
   }
 
+  async findByReferralCode(code: string): Promise<User | null> {
+    const normalized = normalizeReferralCodeInput(code);
+    if (!normalized) {
+      return null;
+    }
+    const row = await this.repo.findOne({
+      where: { referralCode: normalized },
+    });
+    return row ? toDomain(row) : null;
+  }
+
+  async countUsersReferredBy(referrerUserId: string): Promise<number> {
+    return this.repo.count({
+      where: { referredByUserId: referrerUserId },
+    });
+  }
+
+  async applyReferredByIfEmpty(
+    userId: string,
+    referrerUserId: string,
+  ): Promise<boolean> {
+    const res = await this.repo
+      .createQueryBuilder()
+      .update(UserOrmEntity)
+      .set({ referredByUserId: referrerUserId })
+      .where('id = :userId', { userId })
+      .andWhere('referredByUserId IS NULL')
+      .execute();
+    return (res.affected ?? 0) === 1;
+  }
+
   async create(data: CreateUserData): Promise<User> {
+    let referralCode = generateReferralCode(10);
+    for (let i = 0; i < 20; i++) {
+      const taken = await this.repo.findOne({
+        where: { referralCode },
+        select: ['id'],
+      });
+      if (!taken) break;
+      referralCode = generateReferralCode(10);
+    }
     const row = this.repo.create({
       email: data.email.trim().toLowerCase(),
       fullName: data.fullName?.trim() ? data.fullName.trim() : null,
       password: data.passwordHash,
       role: data.role ?? UserRole.Freelancer,
+      referralCode,
+      referredByUserId: data.referredByUserId ?? null,
+      referralMigrationCredits: 0,
     });
     const saved = await this.repo.save(row);
     return toDomain(saved);
@@ -118,5 +171,32 @@ export class UserTypeOrmRepository implements IUserRepository {
     row.passwordResetExpires = null;
     await this.repo.save(row);
     return true;
+  }
+
+  async incrementReferralSlotsEarnedCapped(
+    referrerUserId: string,
+    cap: number,
+  ): Promise<void> {
+    const row = await this.repo.findOne({ where: { id: referrerUserId } });
+    if (!row) {
+      return;
+    }
+    const cur = row.referralSlotsEarned ?? 0;
+    const next = Math.min(cap, cur + 1);
+    await this.repo.update(referrerUserId, { referralSlotsEarned: next });
+  }
+
+  async incrementPurchasedPublicationSlots(
+    userId: string,
+    delta: number,
+  ): Promise<void> {
+    if (delta <= 0) {
+      return;
+    }
+    await this.repo.increment(
+      { id: userId },
+      'purchasedPublicationSlots',
+      delta,
+    );
   }
 }

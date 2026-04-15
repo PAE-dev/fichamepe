@@ -7,6 +7,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { PriceDisplay } from "@/components/ui/PriceDisplay";
 import { ServiceDetailActions } from "@/components/services/ServiceDetailActions";
+import { ServiceReviewsSection } from "@/components/reviews/ServiceReviewsSection";
 import {
   fetchFeedServicesSafe,
   fetchServiceById,
@@ -136,6 +137,14 @@ export default async function ServicioDetailPage({ params }: PageProps) {
                 </p>
               </div>
             </div>
+
+            <ServiceReviewsSection
+              serviceId={service.id}
+              serviceTitle={service.title}
+              sellerUserId={service.userId}
+              reviewCount={service.reviewCount ?? 0}
+              reviewAverage={service.reviewAverage ?? 0}
+            />
           </section>
 
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">

@@ -1,29 +1,7 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
-import {
-  Bookmark,
-  Drama,
-  Languages,
-  Laptop,
-  Lightbulb,
-  Palette,
-  Smartphone,
-  Sparkles,
-  Check,
-} from "lucide-react";
+import { Check } from "lucide-react";
 import { SKILL_CATEGORIES } from "./skill-wizard.constants";
-
-const CATEGORY_ICONS: Record<(typeof SKILL_CATEGORIES)[number]["id"], LucideIcon> = {
-  tech: Laptop,
-  design: Palette,
-  content: Smartphone,
-  language: Languages,
-  entertainment: Drama,
-  advice: Lightbulb,
-  lifestyle: Sparkles,
-  other: Bookmark,
-};
 
 type CategoryCardGridProps = {
   value: string;
@@ -38,7 +16,7 @@ export function CategoryCardGrid({ value, onChange, onBlur, error }: CategoryCar
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4">
         {SKILL_CATEGORIES.map((category) => {
           const selected = value === category.id;
-          const Icon = CATEGORY_ICONS[category.id];
+          const CategoryIcon = category.Icon;
           return (
             <button
               key={category.id}
@@ -55,8 +33,9 @@ export function CategoryCardGrid({ value, onChange, onBlur, error }: CategoryCar
                 className={`flex size-10 items-center justify-center rounded-xl sm:size-11 ${
                   selected ? "bg-primary text-white" : "bg-primary/10 text-primary"
                 }`}
+                aria-hidden
               >
-                <Icon className="size-5 sm:size-[22px]" strokeWidth={2} aria-hidden />
+                <CategoryIcon className="size-[22px] sm:size-6" strokeWidth={2} />
               </span>
               <p
                 className={`text-left text-xs font-semibold leading-snug sm:text-[13px] ${

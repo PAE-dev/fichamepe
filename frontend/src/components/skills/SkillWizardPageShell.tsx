@@ -2,9 +2,10 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { isAxiosError } from "axios";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react/button";
-import { Checkbox } from "@heroui/react/checkbox";
+import { Switch } from "@heroui/react/switch";
 import type { SkillFormDraft } from "@/lib/api/my-services.api";
 import {
   createSkillService,
@@ -42,12 +43,12 @@ type SkillWizardPageShellProps = {
   initialService?: ServicePublic | null;
 };
 
-function statusBadgeClass(status: string): string {
-  if (status === "ACTIVA") return "bg-success/15 text-success";
-  if (status === "EN_REVISION") return "bg-primary/15 text-primary";
-  if (status === "REQUIERE_CAMBIOS") return "bg-accent-red/15 text-accent-red";
-  if (status === "PAUSADA") return "bg-accent/15 text-accent";
-  return "bg-muted/20 text-muted";
+function editStatusBannerClass(status: ServicePublic["status"]): string {
+  if (status === "ACTIVA") return "border-success/30 bg-success/10";
+  if (status === "PAUSADA") return "border-accent/35 bg-accent/10";
+  if (status === "EN_REVISION") return "border-primary/30 bg-primary/10";
+  if (status === "REQUIERE_CAMBIOS") return "border-accent-red/30 bg-accent-red/10";
+  return "border-border bg-surface-elevated";
 }
 
 function statusLabel(status: ServicePublic["status"]): string {
@@ -327,18 +328,40 @@ export function SkillWizardPageShell({ mode, skillId, initialService }: SkillWiz
       <header className="space-y-3">
         <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">{heading}</h1>
         {mode === "edit" && currentStatus ? (
-          <p
-            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusBadgeClass(currentStatus)}`}
+          <div
+            role="status"
+            className={`rounded-2xl border-2 px-4 py-3 sm:px-5 ${editStatusBannerClass(currentStatus)}`}
           >
-            Estado actual: {statusLabel(currentStatus)}
-          </p>
+            <p className="text-sm font-bold text-foreground">Estado: {statusLabel(currentStatus)}</p>
+            {currentStatus === "ACTIVA" ? (
+              <p className="mt-1 text-xs leading-relaxed text-muted">Visible públicamente en el marketplace.</p>
+            ) : null}
+            {currentStatus === "PAUSADA" ? (
+              <p className="mt-1 text-xs leading-relaxed text-muted">
+                Oculta temporalmente; conservas datos y estadísticas.
+              </p>
+            ) : null}
+            {currentStatus === "BORRADOR" ? (
+              <p className="mt-1 text-xs leading-relaxed text-muted">Guardada en tu cuenta; no es visible públicamente.</p>
+            ) : null}
+            {currentStatus === "EN_REVISION" ? (
+              <p className="mt-1 text-xs leading-relaxed text-muted">
+                El equipo está revisando los cambios antes de publicar.
+              </p>
+            ) : null}
+            {currentStatus === "REQUIERE_CAMBIOS" ? (
+              <p className="mt-1 text-xs leading-relaxed text-muted">
+                Revisa las observaciones en «Mis publicaciones» y vuelve a enviar cuando esté listo.
+              </p>
+            ) : null}
+          </div>
         ) : null}
       </header>
 
       <SkillWizardProgress currentStep={step} />
 
       <div
-        className={`rounded-3xl border-2 border-border bg-white p-4 shadow-md transition-all sm:p-6 md:p-8 ${
+        className={`rounded-3xl border-2 border-border bg-surface p-4 shadow-md transition-all sm:p-6 md:p-8 ${
           direction === "forward" ? "animate-in slide-in-from-right-3" : "animate-in slide-in-from-left-3"
         }`}
       >
@@ -384,15 +407,23 @@ export function SkillWizardPageShell({ mode, skillId, initialService }: SkillWiz
 
       {step === 2 ? (
         <div className="rounded-2xl border-2 border-border bg-surface-elevated/30 p-4 shadow-sm sm:p-5">
-          <Checkbox
+          <Switch
             isSelected={data.publishAsDraft}
             onChange={(checked) => onFieldChange("publishAsDraft", checked)}
             className="text-sm text-foreground"
+            aria-label="Publicar como borrador"
           >
-            {mode === "edit"
-              ? "Guardar como borrador (no aparece en Explorar hasta que reactives)"
-              : "Publicar como borrador"}
-          </Checkbox>
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+            <Switch.Content>
+              <span className="text-sm font-semibold text-foreground">
+                {mode === "edit"
+                  ? "Guardar como borrador (no aparece en Explorar hasta que reactives)"
+                  : "Publicar como borrador"}
+              </span>
+            </Switch.Content>
+          </Switch>
           {mode === "edit" ? (
             <p className="mt-2 text-xs leading-relaxed text-muted">
               Si lo desmarcas, enviaremos la actualización a revisión antes de publicarse.
@@ -405,7 +436,22 @@ export function SkillWizardPageShell({ mode, skillId, initialService }: SkillWiz
           )}
         </div>
       ) : null}
-      {submitError ? <p className="text-sm font-medium text-accent-red">{submitError}</p> : null}
+      {submitError ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-accent-red">{submitError}</p>
+          {submitError.includes("Límite de publicaciones") ? (
+            <p className="text-sm text-muted">
+              <Link
+                href="/cuenta/referidos"
+                className="font-semibold text-primary underline-offset-2 hover:underline"
+              >
+                Abrir «Mis referidos»
+              </Link>{" "}
+              para compartir tu código o ver cómo ganar más cupos.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between gap-3">
         <Button
@@ -414,7 +460,7 @@ export function SkillWizardPageShell({ mode, skillId, initialService }: SkillWiz
           isDisabled={step === 0 || saving}
           onPress={goBack}
         >
-          Volver
+          Atrás
         </Button>
         {step < SKILL_WIZARD_STEPS.length - 1 ? (
           <Button
@@ -431,11 +477,7 @@ export function SkillWizardPageShell({ mode, skillId, initialService }: SkillWiz
             isDisabled={saving || !canPublish(data)}
             onPress={handleSubmit}
           >
-            {data.publishAsDraft
-              ? "Guardar borrador"
-              : mode === "edit"
-                ? "Actualizar publicación"
-                : "Publicar habilidad"}
+            {data.publishAsDraft ? "Guardar borrador" : "Publicar habilidad"}
           </Button>
         )}
       </div>

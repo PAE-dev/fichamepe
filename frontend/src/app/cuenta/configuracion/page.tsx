@@ -149,6 +149,9 @@ export default function CuentaConfiguracionPage() {
       </section>
 
       <Modal isOpen={modal === "deactivate"} onOpenChange={(open) => !open && closeModal()}>
+        <Modal.Trigger className="sr-only" aria-label="Abrir desactivar cuenta">
+          Abrir
+        </Modal.Trigger>
         <Modal.Backdrop isDismissable className="bg-primary-dark/40 backdrop-blur-[2px]">
           <Modal.Container placement="center" size="lg">
             <Modal.Dialog className="rounded-2xl border border-border bg-white p-0 shadow-xl">
@@ -193,6 +196,9 @@ export default function CuentaConfiguracionPage() {
       </Modal>
 
       <Modal isOpen={modal === "delete"} onOpenChange={(open) => !open && closeModal()}>
+        <Modal.Trigger className="sr-only" aria-label="Abrir eliminar cuenta">
+          Abrir
+        </Modal.Trigger>
         <Modal.Backdrop isDismissable className="bg-primary-dark/40 backdrop-blur-[2px]">
           <Modal.Container placement="center" size="lg">
             <Modal.Dialog className="rounded-2xl border border-border bg-white p-0 shadow-xl">

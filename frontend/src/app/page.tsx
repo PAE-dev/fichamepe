@@ -14,9 +14,11 @@ import { ActivityToast } from "@/components/engagement/ActivityToast";
 import { fetchMergedHomeFeed } from "@/lib/api/services.api";
 import { HOME_MACRO_CATEGORIES } from "@/lib/constants";
 import { macroSlugForService } from "@/lib/service-macro-category";
+import { isActivePromo } from "@/lib/service-promo";
 
 export default async function Home() {
   const { services } = await fetchMergedHomeFeed(36);
+  const hasFlashDeals = services.filter((s) => isActivePromo(s)).slice(0, 4).length > 0;
   const counts = Object.fromEntries(HOME_MACRO_CATEGORIES.map((category) => [category.slug, 0]));
 
   for (const service of services) {
@@ -32,7 +34,7 @@ export default async function Home() {
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-10 px-4 pb-28 pt-5">
         <FlashDeals services={services} />
-        <TrendingSection services={services} />
+        <TrendingSection services={services} prioritizeFirstCover={!hasFlashDeals} />
         <DiscoveryFeed services={services} />
         <NearYouSection services={services} />
         <TopRatedSection services={services} />

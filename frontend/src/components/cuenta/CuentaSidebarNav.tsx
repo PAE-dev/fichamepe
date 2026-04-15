@@ -7,8 +7,10 @@ import { useAuthStore } from "@/store/auth.store";
 
 const CUENTA_LINKS = [
   { href: "/cuenta/perfil", label: "Editar perfil", match: "/cuenta/perfil" },
+  { href: "/cuenta/plan", label: "Planes y cupos", match: "/cuenta/plan" },
   { href: "/skills/new", label: "Nueva habilidad", match: "/skills/new" },
   { href: "/cuenta/configuracion", label: "Configuración", match: "/cuenta/configuracion" },
+  { href: "/cuenta/referidos", label: "Mis referidos", match: "/cuenta/referidos" },
   { href: "/cuenta/publicaciones", label: "Mis publicaciones", match: "/cuenta/publicaciones" },
   {
     href: "/cuenta/publicaciones?filtro=REQUIERE_CAMBIOS",

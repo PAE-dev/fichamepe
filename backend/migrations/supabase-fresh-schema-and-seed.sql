@@ -7,8 +7,12 @@ BEGIN;
 -- ---------------------------------------------------------------------------
 -- LIMPIEZA (orden: hijos primero por FK)
 -- ---------------------------------------------------------------------------
+DROP TABLE IF EXISTS "publication_slot_purchase" CASCADE;
 DROP TABLE IF EXISTS "token_transactions" CASCADE;
 DROP TABLE IF EXISTS "subscriptions" CASCADE;
+DROP TABLE IF EXISTS "conversation_message" CASCADE;
+DROP TABLE IF EXISTS "conversation" CASCADE;
+DROP TABLE IF EXISTS "service_review" CASCADE;
 DROP TABLE IF EXISTS "service" CASCADE;
 DROP TABLE IF EXISTS "profile_skills" CASCADE;
 DROP TABLE IF EXISTS "profile" CASCADE;
@@ -31,11 +35,20 @@ CREATE TABLE "user" (
   "tokenBalance" integer NOT NULL DEFAULT 0,
   "passwordResetToken" character varying,
   "passwordResetExpires" TIMESTAMP,
+  "referralCode" character varying(16) NOT NULL,
+  "referredByUserId" uuid,
+  "referralMigrationCredits" integer NOT NULL DEFAULT 0,
+  "referralSlotsEarned" integer NOT NULL DEFAULT 0,
+  "purchasedPublicationSlots" integer NOT NULL DEFAULT 0,
   "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
   "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
   CONSTRAINT "PK_user" PRIMARY KEY ("id"),
-  CONSTRAINT "UQ_user_email" UNIQUE ("email")
+  CONSTRAINT "UQ_user_email" UNIQUE ("email"),
+  CONSTRAINT "UQ_user_referralCode" UNIQUE ("referralCode"),
+  CONSTRAINT "FK_user_referredByUser" FOREIGN KEY ("referredByUserId") REFERENCES "user"("id") ON DELETE SET NULL
 );
+
+CREATE INDEX "IDX_user_referredByUserId" ON "user" ("referredByUserId");
 
 CREATE TABLE "skills" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -88,6 +101,8 @@ CREATE TABLE "service" (
   "promoEndsAt" timestamptz,
   "profileId" uuid NOT NULL,
   "userId" uuid NOT NULL,
+  "reviewCount" integer NOT NULL DEFAULT 0,
+  "reviewAverage" numeric(3, 1) NOT NULL DEFAULT 0,
   "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
   "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
   CONSTRAINT "PK_service" PRIMARY KEY ("id"),
@@ -98,6 +113,75 @@ CREATE TABLE "service" (
 CREATE INDEX "IDX_service_status" ON "service" ("status");
 CREATE INDEX "IDX_service_view_count" ON "service" ("viewCount");
 CREATE INDEX "IDX_service_created_at" ON "service" ("createdAt");
+
+CREATE TABLE "publication_slot_purchase" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "userId" uuid NOT NULL,
+  "kind" character varying(16) NOT NULL,
+  "slotsGranted" integer NOT NULL,
+  "amountPen" numeric(10, 2) NOT NULL,
+  "status" character varying(24) NOT NULL DEFAULT 'pending_payment',
+  "paymentReference" character varying(255),
+  "fulfilledByUserId" uuid,
+  "fulfilledAt" TIMESTAMP,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
+  CONSTRAINT "PK_publication_slot_purchase" PRIMARY KEY ("id"),
+  CONSTRAINT "FK_publication_slot_purchase_user" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE,
+  CONSTRAINT "FK_publication_slot_purchase_fulfilledBy" FOREIGN KEY ("fulfilledByUserId") REFERENCES "user"("id") ON DELETE SET NULL
+);
+
+CREATE INDEX "IDX_publication_slot_purchase_userId" ON "publication_slot_purchase" ("userId");
+CREATE INDEX "IDX_publication_slot_purchase_status" ON "publication_slot_purchase" ("status");
+
+CREATE TABLE "conversation" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "serviceId" uuid NOT NULL,
+  "sellerUserId" uuid NOT NULL,
+  "buyerUserId" uuid NOT NULL,
+  "createdAt" timestamptz NOT NULL DEFAULT now(),
+  "updatedAt" timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT "PK_conversation" PRIMARY KEY ("id"),
+  CONSTRAINT "FK_conversation_service" FOREIGN KEY ("serviceId") REFERENCES "service"("id") ON DELETE CASCADE,
+  CONSTRAINT "FK_conversation_seller" FOREIGN KEY ("sellerUserId") REFERENCES "user"("id") ON DELETE CASCADE,
+  CONSTRAINT "FK_conversation_buyer" FOREIGN KEY ("buyerUserId") REFERENCES "user"("id") ON DELETE CASCADE,
+  CONSTRAINT "UQ_conversation_service_buyer" UNIQUE ("serviceId", "buyerUserId")
+);
+
+CREATE INDEX "IDX_conversation_seller" ON "conversation" ("sellerUserId");
+CREATE INDEX "IDX_conversation_buyer" ON "conversation" ("buyerUserId");
+CREATE INDEX "IDX_conversation_updated" ON "conversation" ("updatedAt");
+
+CREATE TABLE "conversation_message" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "conversationId" uuid NOT NULL,
+  "senderUserId" uuid NOT NULL,
+  "body" text NOT NULL,
+  "createdAt" timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT "PK_conversation_message" PRIMARY KEY ("id"),
+  CONSTRAINT "FK_conversation_message_conversation" FOREIGN KEY ("conversationId") REFERENCES "conversation"("id") ON DELETE CASCADE,
+  CONSTRAINT "FK_conversation_message_sender" FOREIGN KEY ("senderUserId") REFERENCES "user"("id") ON DELETE CASCADE
+);
+
+CREATE INDEX "IDX_conversation_message_conversation_created" ON "conversation_message" ("conversationId", "createdAt");
+
+CREATE TABLE "service_review" (
+  "id" uuid NOT NULL DEFAULT gen_random_uuid(),
+  "serviceId" uuid NOT NULL,
+  "authorUserId" uuid NOT NULL,
+  "rating" smallint NOT NULL,
+  "body" text NOT NULL,
+  "isVerifiedPurchase" boolean NOT NULL DEFAULT false,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
+  CONSTRAINT "PK_service_review" PRIMARY KEY ("id"),
+  CONSTRAINT "FK_service_review_service" FOREIGN KEY ("serviceId") REFERENCES "service"("id") ON DELETE CASCADE,
+  CONSTRAINT "FK_service_review_author" FOREIGN KEY ("authorUserId") REFERENCES "user"("id") ON DELETE CASCADE,
+  CONSTRAINT "CHK_service_review_rating" CHECK ("rating" >= 1 AND "rating" <= 5),
+  CONSTRAINT "UQ_service_review_service_author" UNIQUE ("serviceId", "authorUserId")
+);
+
+CREATE INDEX "IDX_service_review_service_created" ON "service_review" ("serviceId", "createdAt" DESC);
 
 CREATE TABLE "subscriptions" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -135,19 +219,19 @@ CREATE TABLE "token_transactions" (
 -- DATOS DEMO (usuarios → perfiles → servicios)
 -- ---------------------------------------------------------------------------
 
-INSERT INTO "user" ("id", "email", "password", "role", "isActive", "isPro", "tokenBalance", "createdAt", "updatedAt") VALUES
-('a1b2c3d4-0001-0001-0001-000000000001', 'juan.comediante@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 10, now(), now()),
-('a1b2c3d4-0002-0002-0002-000000000002', 'maria.diseno@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 5, now(), now()),
-('a1b2c3d4-0003-0003-0003-000000000003', 'carlos.profe@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 8, now(), now()),
-('a1b2c3d4-0004-0004-0004-000000000004', 'lucia.community@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 3, now(), now()),
-('a1b2c3d4-0005-0005-0005-000000000005', 'pedro.streamer@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 12, now(), now()),
-('a1b2c3d4-0006-0006-0006-000000000006', 'ana.hater@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 6, now(), now()),
-('a1b2c3d4-0007-0007-0007-000000000007', 'diego.video@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 9, now(), now()),
-('a1b2c3d4-0008-0008-0008-000000000008', 'sofia.abogada@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 4, now(), now()),
-('a1b2c3d4-0009-0009-0009-000000000009', 'miguel.musico@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 7, now(), now()),
-('a1b2c3d4-0010-0010-0010-000000000010', 'valeria.coach@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 2, now(), now()),
-('a1b2c3d4-0011-0011-0011-000000000011', 'renzo.animador@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 15, now(), now()),
-('a1b2c3d4-0012-0012-0012-000000000012', 'camila.excel@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 5, now(), now());
+INSERT INTO "user" ("id", "email", "password", "role", "isActive", "isPro", "tokenBalance", "referralCode", "referredByUserId", "referralMigrationCredits", "referralSlotsEarned", "purchasedPublicationSlots", "createdAt", "updatedAt") VALUES
+('a1b2c3d4-0001-0001-0001-000000000001', 'juan.comediante@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 10, 'DEMOJUAN01', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0002-0002-0002-000000000002', 'maria.diseno@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 5, 'DEMOMARIA02', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0003-0003-0003-000000000003', 'carlos.profe@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 8, 'DEMOCARLOS3', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0004-0004-0004-000000000004', 'lucia.community@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 3, 'DEMOLUCIA04', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0005-0005-0005-000000000005', 'pedro.streamer@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 12, 'DEMOPEDRO05', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0006-0006-0006-000000000006', 'ana.hater@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 6, 'DEMOANA006', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0007-0007-0007-000000000007', 'diego.video@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 9, 'DEMODIEGO07', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0008-0008-0008-000000000008', 'sofia.abogada@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 4, 'DEMOSOFIA08', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0009-0009-0009-000000000009', 'miguel.musico@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 7, 'DEMOMIGUEL9', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0010-0010-0010-000000000010', 'valeria.coach@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 2, 'DEMOVALER10', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0011-0011-0011-000000000011', 'renzo.animador@gmail.com', '$2b$10$placeholder', 'freelancer', true, true, 15, 'DEMORENZO11', NULL, 0, 0, 0, now(), now()),
+('a1b2c3d4-0012-0012-0012-000000000012', 'camila.excel@gmail.com', '$2b$10$placeholder', 'freelancer', true, false, 5, 'DEMOCAMIL12', NULL, 0, 0, 0, now(), now());
 
 INSERT INTO "profile" ("id", "displayName", "bio", "district", "whatsappNumber", "hourlyRate", "isAvailable", "userId") VALUES
 ('b1b2c3d4-0001-0001-0001-000000000001', 'Juan el Comediante', 'Hago reír a equipos aburridos por Meet. 5 años haciendo stand-up en Lima.', 'Miraflores', '51999000001', 80, true, 'a1b2c3d4-0001-0001-0001-000000000001'),

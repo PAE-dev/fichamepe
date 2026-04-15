@@ -15,7 +15,10 @@ import { UploadsModule } from './uploads/uploads.module';
 import { AdminModule } from './admin/admin.module';
 import { ServicesModule } from './services/services.module';
 import { ServiceReportsModule } from './service-reports/service-reports.module';
+import { ServiceReviewsModule } from './service-reviews/service-reviews.module';
 import { PresenceModule } from './presence/presence.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { PublicationSlotPurchasesModule } from './publication-slot-purchases/publication-slot-purchases.module';
 import { buildTypeOrmOptions } from './database/typeorm-options.factory';
 import { validateEnv } from './common/config/env.validation';
 import { LoggerModule } from './common/logger/logger.module';
@@ -50,9 +53,12 @@ import { LoggerModule } from './common/logger/logger.module';
     SubscriptionsModule,
     UploadsModule,
     AdminModule,
+    ServiceReviewsModule,
     ServicesModule,
     ServiceReportsModule,
     PresenceModule,
+    ConversationsModule,
+    PublicationSlotPurchasesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from '../users/users.module';
 import { ProfilesModule } from '../profiles/profiles.module';
+import { ServicesModule } from '../services/services.module';
 import { parseEnvDurationToSeconds } from './infrastructure/utils/parse-env-duration';
 import { requireEnvSecret } from './infrastructure/utils/require-env-secret';
 import { NestJwtAuthTokenService } from './infrastructure/jwt/nest-jwt-auth-token.service';
@@ -29,6 +30,7 @@ import { AUTH_TOKEN_SERVICE } from './auth.di-tokens';
   imports: [
     forwardRef(() => UsersModule),
     forwardRef(() => ProfilesModule),
+    forwardRef(() => ServicesModule),
     TypeOrmModule.forFeature([AuthLoginEventOrmEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
@@ -62,6 +64,12 @@ import { AUTH_TOKEN_SERVICE } from './auth.di-tokens';
     JwtRefreshAuthGuard,
     RolesGuard,
   ],
-  exports: [JwtAuthGuard, JwtRefreshAuthGuard, RolesGuard, AUTH_TOKEN_SERVICE],
+  exports: [
+    JwtAuthGuard,
+    JwtRefreshAuthGuard,
+    RolesGuard,
+    AUTH_TOKEN_SERVICE,
+    JwtModule,
+  ],
 })
 export class AuthModule {}

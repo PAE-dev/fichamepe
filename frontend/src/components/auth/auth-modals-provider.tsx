@@ -6,6 +6,7 @@ import { AuthModalsContext } from "@/components/auth/auth-modals-context";
 import { ForgotPasswordModal } from "@/components/auth/ForgotPasswordModal";
 import { LoginModal } from "@/components/auth/LoginModal";
 import { RegisterModal } from "@/components/auth/RegisterModal";
+import { ReferralLinkOpener } from "@/components/auth/ReferralLinkOpener";
 
 export function AuthModalsProvider({ children }: { children: ReactNode }) {
   const loginState = useOverlayState();
@@ -14,8 +15,12 @@ export function AuthModalsProvider({ children }: { children: ReactNode }) {
   const [registerInitialRole, setRegisterInitialRole] = useState<
     "client" | "freelancer" | null
   >(null);
+  const [registerReferralCode, setRegisterReferralCode] = useState<string | null>(null);
 
-  const clearRegisterRole = useCallback(() => setRegisterInitialRole(null), []);
+  const clearRegisterExtras = useCallback(() => {
+    setRegisterInitialRole(null);
+    setRegisterReferralCode(null);
+  }, []);
 
   const openLogin = useCallback(() => {
     registerState.close();
@@ -24,8 +29,10 @@ export function AuthModalsProvider({ children }: { children: ReactNode }) {
   }, [loginState, registerState, forgotPasswordState]);
 
   const openRegister = useCallback(
-    (opts?: { role?: "client" | "freelancer" }) => {
+    (opts?: { role?: "client" | "freelancer"; referralCode?: string | null }) => {
       setRegisterInitialRole(opts?.role ?? null);
+      const rc = opts?.referralCode?.trim();
+      setRegisterReferralCode(rc ? rc.toUpperCase() : null);
       loginState.close();
       forgotPasswordState.close();
       registerState.open();
@@ -47,6 +54,9 @@ export function AuthModalsProvider({ children }: { children: ReactNode }) {
   return (
     <AuthModalsContext.Provider value={value}>
       {children}
+      <Suspense fallback={null}>
+        <ReferralLinkOpener />
+      </Suspense>
       {forgotPasswordState.isOpen ? (
         <ForgotPasswordModal state={forgotPasswordState} />
       ) : null}
@@ -59,7 +69,8 @@ export function AuthModalsProvider({ children }: { children: ReactNode }) {
         <RegisterModal
           state={registerState}
           initialRole={registerInitialRole}
-          onClosed={clearRegisterRole}
+          initialReferralCode={registerReferralCode}
+          onClosed={clearRegisterExtras}
           onSwitchToLogin={openLogin}
         />
       ) : null}

@@ -4,7 +4,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Bell, Heart, Menu, MessageCircle, Plus, X } from "lucide-react";
+import {
+  Bell,
+  ClipboardList,
+  FileStack,
+  Heart,
+  LayoutGrid,
+  LogOut,
+  Menu,
+  MessageCircle,
+  Plus,
+  Settings,
+  UserPen,
+  Users,
+  X,
+} from "lucide-react";
 import { useOverlayState } from "@heroui/react";
 import { Button } from "@heroui/react/button";
 import { Drawer } from "@heroui/react/drawer";
@@ -19,9 +33,15 @@ import { SITE_LOGO_URL } from "@/lib/constants";
 import type { AuthUser } from "@/types/auth";
 
 const ACCOUNT_MENU_LINKS = [
-  { href: "/cuenta/configuracion", label: "Configuración" },
-  { href: "/cuenta/publicaciones", label: "Mis publicaciones" },
-  { href: "/cuenta/publicaciones?filtro=REQUIERE_CAMBIOS", label: "Correcciones pendientes" },
+  { href: "/cuenta/plan", label: "Planes y cupos", Icon: LayoutGrid },
+  { href: "/cuenta/configuracion", label: "Configuración", Icon: Settings },
+  { href: "/cuenta/referidos", label: "Mis referidos", Icon: Users },
+  { href: "/cuenta/publicaciones", label: "Mis publicaciones", Icon: FileStack },
+  {
+    href: "/cuenta/publicaciones?filtro=REQUIERE_CAMBIOS",
+    label: "Correcciones pendientes",
+    Icon: ClipboardList,
+  },
 ] as const;
 
 function firstNameFromUser(user: AuthUser): string {
@@ -75,6 +95,11 @@ function UserAccountPillContent({ user }: { user: AuthUser }) {
           Hola, {name}
         </span>
         <span className="block truncate text-xs text-muted">Mi cuenta</span>
+        {!user.isPublicationExempt && user.publicationActiveMax != null ? (
+          <span className="block truncate text-[11px] font-medium tabular-nums text-primary/90">
+            {user.publicationActiveCount}/{user.publicationActiveMax} activas
+          </span>
+        ) : null}
       </span>
     </span>
   );
@@ -91,25 +116,36 @@ function UserAccountDropdown({ user }: { user: AuthUser }) {
 
   return (
     <Dropdown>
-      <Dropdown.Trigger aria-label="Menú de cuenta">
-        <div
-          className={`${accountPillClassName()} cursor-pointer !h-auto !min-h-0 !rounded-full !border-border !bg-white !py-1.5 !pl-1.5 !pr-3 !font-normal !shadow-none hover:!bg-primary/[0.06]`}
-        >
-          <UserAccountPillContent user={user} />
-        </div>
+      <Dropdown.Trigger
+        aria-label="Menú de cuenta"
+        className={`${accountPillClassName()} !h-auto !min-h-0 !rounded-full !border-border !bg-white !py-1.5 !pl-1.5 !pr-3 !font-normal !shadow-none hover:!bg-primary/[0.06]`}
+      >
+        <UserAccountPillContent user={user} />
       </Dropdown.Trigger>
       <Dropdown.Popover placement="bottom end" className="min-w-[220px]">
         <Dropdown.Menu aria-label="Cuenta">
           <Dropdown.Item key="/cuenta/perfil" href="/cuenta/perfil" className="cursor-pointer">
-            Editar perfil
+            <span className="flex items-center gap-2.5">
+              <UserPen className="size-4 shrink-0 text-muted" aria-hidden />
+              <span>Editar perfil</span>
+            </span>
           </Dropdown.Item>
-          {ACCOUNT_MENU_LINKS.map((item) => (
-            <Dropdown.Item key={item.label} href={item.href} className="cursor-pointer">
-              {item.label}
-            </Dropdown.Item>
-          ))}
+          {ACCOUNT_MENU_LINKS.map((item) => {
+            const Icon = item.Icon;
+            return (
+              <Dropdown.Item key={item.href} href={item.href} className="cursor-pointer">
+                <span className="flex items-center gap-2.5">
+                  <Icon className="size-4 shrink-0 text-muted" aria-hidden />
+                  <span>{item.label}</span>
+                </span>
+              </Dropdown.Item>
+            );
+          })}
           <Dropdown.Item variant="danger" className="cursor-pointer" onAction={handleLogout}>
-            Cerrar sesión
+            <span className="flex items-center gap-2.5">
+              <LogOut className="size-4 shrink-0 opacity-90" aria-hidden />
+              <span>Cerrar sesión</span>
+            </span>
           </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown.Popover>
@@ -146,15 +182,30 @@ function UserAccountMobileBlock({
         <UserAccountPillContent user={user} />
       </Link>
       <div className="mt-1 flex flex-col gap-0.5">
-        <Link href="/cuenta/perfil" onClick={onNavigate} className={linkClass}>
+        <Link href="/cuenta/perfil" onClick={onNavigate} className={`${linkClass} inline-flex items-center gap-2.5`}>
+          <UserPen className="size-4 shrink-0 text-muted" aria-hidden />
           Editar perfil
         </Link>
-        {ACCOUNT_MENU_LINKS.map((item) => (
-          <Link key={item.href} href={item.href} onClick={onNavigate} className={linkClass}>
-            {item.label}
-          </Link>
-        ))}
-        <button type="button" onClick={handleLogout} className={`${linkClass} text-left text-accent-red`}>
+        {ACCOUNT_MENU_LINKS.map((item) => {
+          const Icon = item.Icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onNavigate}
+              className={`${linkClass} inline-flex items-center gap-2.5`}
+            >
+              <Icon className="size-4 shrink-0 text-muted" aria-hidden />
+              {item.label}
+            </Link>
+          );
+        })}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className={`${linkClass} inline-flex items-center gap-2.5 text-left text-accent-red`}
+        >
+          <LogOut className="size-4 shrink-0 opacity-90" aria-hidden />
           Cerrar sesión
         </button>
       </div>
@@ -285,7 +336,7 @@ export function Navbar() {
               <>
                 <Link
                   href="/skills/new"
-                  className="hidden h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-[#7B61FF] px-4 text-sm font-semibold text-white no-underline transition hover:opacity-95 xl:inline-flex"
+                  className="hidden h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-primary px-4 text-sm font-semibold text-white no-underline transition hover:opacity-95 xl:inline-flex"
                 >
                   <Plus className="size-4" aria-hidden />
                   Publicar habilidad
@@ -294,13 +345,13 @@ export function Navbar() {
                 <div className="relative" ref={conversationsMenuRef}>
                   <button
                     type="button"
-                    className="relative inline-flex size-10 items-center justify-center rounded-full border border-[#7B61FF]/30 bg-[#7B61FF]/10 text-[#7B61FF] transition hover:border-[#7B61FF]/50 hover:bg-[#7B61FF]/15"
+                    className="relative inline-flex size-10 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary transition hover:border-primary/50 hover:bg-primary/15"
                     aria-label="Conversaciones"
                     onClick={() => setIsConversationsOpen((prev) => !prev)}
                   >
                     <MessageCircle className="size-4" aria-hidden />
                     {unreadTotal > 0 ? (
-                      <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-[#7B61FF] px-1 py-0.5 text-[10px] font-bold text-white">
+                      <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-primary px-1 py-0.5 text-[10px] font-bold text-white">
                         {unreadTotal}
                       </span>
                     ) : null}
@@ -342,19 +393,19 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => router.push("/skills/new")}
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7B61FF] text-white shadow-sm transition hover:opacity-95"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-sm transition hover:opacity-95"
                   aria-label="Publicar habilidad"
                 >
                   <Plus className="size-5" aria-hidden />
                 </button>
                 <Link
                   href="/conversaciones"
-                  className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#7B61FF]/30 bg-[#7B61FF]/10 text-[#7B61FF] transition hover:border-[#7B61FF]/50"
+                  className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary transition hover:border-primary/50"
                   aria-label="Conversaciones"
                 >
                   <MessageCircle className="size-5" aria-hidden />
                   {unreadTotal > 0 ? (
-                    <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-[#7B61FF] px-1 py-0.5 text-[10px] font-bold text-white">
+                    <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-primary px-1 py-0.5 text-[10px] font-bold text-white">
                       {unreadTotal}
                     </span>
                   ) : null}
@@ -373,6 +424,7 @@ export function Navbar() {
                   <Drawer.Dialog className="border-l border-border bg-white">
                     <Drawer.Header className="flex items-center justify-between border-b border-border px-4 py-3">
                       <BrandLink />
+                      <Drawer.Heading className="sr-only">Menú principal</Drawer.Heading>
                       <Drawer.CloseTrigger
                         aria-label="Cerrar menú"
                         className="inline-flex size-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-primary/5 hover:text-foreground"
@@ -389,7 +441,7 @@ export function Navbar() {
                         <div className="space-y-2">
                           <Button
                             variant="primary"
-                            className="w-full whitespace-nowrap rounded-full bg-[#7B61FF] font-semibold text-white hover:opacity-95"
+                            className="w-full whitespace-nowrap rounded-full bg-primary font-semibold text-white hover:opacity-95"
                             onPress={() => {
                               mobileNav.close();
                               router.push("/skills/new");
@@ -405,7 +457,7 @@ export function Navbar() {
                           >
                             Conversaciones
                             {unreadTotal > 0 ? (
-                              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#7B61FF] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
                                 {unreadTotal}
                               </span>
                             ) : null}

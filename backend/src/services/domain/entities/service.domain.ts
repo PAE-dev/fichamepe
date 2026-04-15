@@ -20,6 +20,8 @@ export class Service {
   /** Compatibilidad temporal para clientes existentes. */
   isActive: boolean;
   viewCount: number;
+  reviewCount: number;
+  reviewAverage: number;
   tags: string[];
   category: string;
   deliveryMode: string;

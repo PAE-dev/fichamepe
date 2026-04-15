@@ -15,9 +15,9 @@ export function FlashDeals({ services }: { services: ServicePublic[] }) {
         <h2 className="text-2xl font-bold text-foreground">Aprovecha antes que vuelen</h2>
       </header>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
-        {items.map((service) => (
+        {items.map((service, index) => (
           <div key={service.id} className="h-full min-h-0">
-            <ServiceCard service={service} />
+            <ServiceCard service={service} coverPriority={index === 0} />
           </div>
         ))}
       </div>

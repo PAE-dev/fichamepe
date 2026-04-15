@@ -22,6 +22,7 @@ const registerSchema = z
     email: z.string().min(1, "Requerido").email("Correo inválido"),
     password: z.string().min(8, "Mínimo 8 caracteres"),
     confirmPassword: z.string().min(1, "Confirma tu contraseña"),
+    referralCode: z.string().max(16, "Máximo 16 caracteres"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
@@ -33,6 +34,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 type RegisterModalProps = {
   state: UseOverlayStateReturn;
   initialRole: "client" | "freelancer" | null;
+  initialReferralCode?: string | null;
   onClosed: () => void;
   onSwitchToLogin: () => void;
 };
@@ -40,6 +42,7 @@ type RegisterModalProps = {
 export function RegisterModal({
   state,
   initialRole,
+  initialReferralCode,
   onClosed,
   onSwitchToLogin,
 }: RegisterModalProps) {
@@ -61,6 +64,7 @@ export function RegisterModal({
       email: "",
       password: "",
       confirmPassword: "",
+      referralCode: "",
     },
   });
 
@@ -72,13 +76,15 @@ export function RegisterModal({
 
   useEffect(() => {
     if (!state.isOpen) return;
+    const ref = initialReferralCode?.trim() ? initialReferralCode.trim().toUpperCase() : "";
     reset({
       fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
+      referralCode: ref,
     });
-  }, [state.isOpen, initialRole, reset]);
+  }, [state.isOpen, initialRole, initialReferralCode, reset]);
 
   const onSubmit = async (data: RegisterForm) => {
     try {
@@ -87,6 +93,9 @@ export function RegisterModal({
         email: data.email.trim().toLowerCase(),
         password: data.password,
         ...(initialRole ? { role: initialRole } : {}),
+        ...(data.referralCode?.trim()
+          ? { referralCode: data.referralCode.trim().toUpperCase() }
+          : {}),
       });
       loginStore(res.accessToken, res.user);
       void import("@/stores/favoritesStore").then(({ useFavoritesStore }) => {
@@ -94,7 +103,7 @@ export function RegisterModal({
       });
       reset();
       state.close();
-      router.replace("/onboarding");
+      router.replace("/");
     } catch (e: unknown) {
       setFormError("root", {
         message: parseApiErrorMessage(e, "No pudimos crear la cuenta."),
@@ -107,6 +116,9 @@ export function RegisterModal({
 
   return (
     <Modal state={state}>
+      <Modal.Trigger className="sr-only" aria-label="Abrir registro">
+        Abrir
+      </Modal.Trigger>
       <Modal.Backdrop
         isDismissable
         className="bg-[#1A1A2E]/50 backdrop-blur-[3px]"
@@ -179,6 +191,34 @@ export function RegisterModal({
                       {errors.email.message}
                     </FieldError>
                   ) : null}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label
+                    htmlFor="register-modal-referralCode"
+                    className="text-left text-sm font-medium text-[#374151]"
+                  >
+                    Código de referido{" "}
+                    <span className="font-normal text-[#9CA3AF]">(opcional)</span>
+                  </Label>
+                  <Input
+                    id="register-modal-referralCode"
+                    type="text"
+                    autoComplete="off"
+                    placeholder="Ej. ABC12XYZ89"
+                    className={pillInputClass}
+                    {...register("referralCode")}
+                    aria-invalid={errors.referralCode ? true : undefined}
+                  />
+                  {errors.referralCode?.message ? (
+                    <FieldError className="text-sm text-red-600">
+                      {errors.referralCode.message}
+                    </FieldError>
+                  ) : null}
+                  <p className="text-xs leading-snug text-[#9CA3AF]">
+                    Si alguien te invitó a fícháme.pe, pega su código aquí. Así le regalas un cupo
+                    extra de publicaciones.
+                  </p>
                 </div>
 
                 <div className="flex flex-col gap-2">

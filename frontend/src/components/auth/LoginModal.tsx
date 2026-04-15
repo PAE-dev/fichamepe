@@ -75,6 +75,9 @@ export function LoginModal({ state }: LoginModalProps) {
 
   return (
     <Modal state={state}>
+      <Modal.Trigger className="sr-only" aria-label="Abrir login">
+        Abrir
+      </Modal.Trigger>
       <Modal.Backdrop
         isDismissable
         className="bg-[#1A1A2E]/50 backdrop-blur-[3px]"

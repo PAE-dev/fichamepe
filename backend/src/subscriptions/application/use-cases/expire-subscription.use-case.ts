@@ -4,6 +4,7 @@ import type { ISubscriptionRepository } from '../../domain/repositories/i-subscr
 import type { IUserRepository } from '../../../users/domain/repositories/user.repository.interface';
 import { USER_REPOSITORY } from '../../../users/users.di-tokens';
 import { REPOSITORY_TOKEN } from '../../subscriptions.di-tokens';
+import { PublicationSlotsAvailabilityService } from '../../../services/application/services/publication-slots-availability.service';
 
 @Injectable()
 export class ExpireSubscriptionUseCase {
@@ -14,6 +15,7 @@ export class ExpireSubscriptionUseCase {
     private readonly subscriptions: ISubscriptionRepository,
     @Inject(USER_REPOSITORY)
     private readonly users: IUserRepository,
+    private readonly publicationSlots: PublicationSlotsAvailabilityService,
   ) {}
 
   async execute(referenceDate = new Date()): Promise<number> {
@@ -27,6 +29,7 @@ export class ExpireSubscriptionUseCase {
         isPro: false,
         proExpiresAt: null,
       });
+      await this.publicationSlots.reconcileActivePublicationsForUser(sub.userId);
       n += 1;
     }
     if (n > 0) {

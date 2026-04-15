@@ -10,12 +10,14 @@ import {
   toServiceResponse,
   type ServiceResponse,
 } from '../../../services/application/mappers/service-response.mapper';
+import { PublicationSlotsAvailabilityService } from '../../../services/application/services/publication-slots-availability.service';
 
 @Injectable()
 export class ApproveServicePublicationUseCase {
   constructor(
     @Inject(SERVICE_REPOSITORY)
     private readonly services: IServiceRepository,
+    private readonly publicationSlots: PublicationSlotsAvailabilityService,
   ) {}
 
   async execute(id: string, adminUserId: string): Promise<ServiceResponse> {
@@ -28,6 +30,10 @@ export class ApproveServicePublicationUseCase {
         'Solo puedes aprobar publicaciones en revisión',
       );
     }
+    await this.publicationSlots.assertMayActivateOneMore(
+      existing.userId,
+      existing.profileId,
+    );
     const updated = await this.services.update(id, {
       status: 'ACTIVA',
       reviewedAt: new Date(),

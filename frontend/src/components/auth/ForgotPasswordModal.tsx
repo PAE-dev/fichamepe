@@ -131,6 +131,9 @@ export function ForgotPasswordModal({ state }: ForgotPasswordModalProps) {
 
   return (
     <Modal state={state}>
+      <Modal.Trigger className="sr-only" aria-label="Abrir recuperación">
+        Abrir
+      </Modal.Trigger>
       <Modal.Backdrop isDismissable className="bg-[#1A1A2E]/50 backdrop-blur-[3px]">
         <Modal.Container placement="center" size="lg" scroll="inside">
           <Modal.Dialog className="w-full !max-w-[min(calc(100vw-12px),480px)] !p-0 sm:!max-w-[480px] rounded-3xl border border-[#E5E7EB] bg-white shadow-2xl outline-none">

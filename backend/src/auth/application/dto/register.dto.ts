@@ -23,4 +23,9 @@ export class RegisterDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+  /** Código de referido (opcional). Normalizado en backend (mayúsculas). */
+  @IsOptional()
+  @IsString()
+  referralCode?: string;
 }

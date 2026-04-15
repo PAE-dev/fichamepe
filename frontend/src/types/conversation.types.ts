@@ -1,6 +1,6 @@
 export type ConversationMessage = {
   id: string;
-  sender: "me" | "other";
+  senderUserId: string;
   text: string;
   createdAt: string;
 };

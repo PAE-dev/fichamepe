@@ -24,25 +24,25 @@ export const mockConversations: ConversationThread[] = [
     messages: [
       {
         id: "msg-1",
-        sender: "other",
+        senderUserId: "user-camila-vega",
         text: "Hola, vi tu publicación de branding. Necesito identidad para lanzar mi marca.",
         createdAt: "2026-04-14T12:10:00.000Z",
       },
       {
         id: "msg-2",
-        sender: "me",
+        senderUserId: MOCK_CONVERSATION_LOCAL_SELLER_ID,
         text: "Hola Camila, claro. Te armamos logo y piezas base sin drama.",
         createdAt: "2026-04-14T12:14:00.000Z",
       },
       {
         id: "msg-3",
-        sender: "other",
+        senderUserId: "user-camila-vega",
         text: "Buenazo, ¿en cuánto tiempo la tienes lista?",
         createdAt: "2026-04-14T12:18:00.000Z",
       },
       {
         id: "msg-4",
-        sender: "other",
+        senderUserId: "user-camila-vega",
         text: "También quisiera incluir formulario de contacto.",
         createdAt: "2026-04-14T12:20:00.000Z",
       },
@@ -70,13 +70,13 @@ export const mockConversations: ConversationThread[] = [
     messages: [
       {
         id: "msg-5",
-        sender: "me",
+        senderUserId: MOCK_CONVERSATION_LOCAL_SELLER_ID,
         text: "Te comparti una propuesta con 4 reels mensuales.",
         createdAt: "2026-04-14T10:00:00.000Z",
       },
       {
         id: "msg-6",
-        sender: "other",
+        senderUserId: "user-diego-rios",
         text: "Perfecto. ¿Podemos iniciar esta semana?",
         createdAt: "2026-04-14T11:45:00.000Z",
       },
@@ -104,13 +104,13 @@ export const mockConversations: ConversationThread[] = [
     messages: [
       {
         id: "msg-7",
-        sender: "other",
+        senderUserId: "user-lucia-prado",
         text: "Gracias por el entregable. Suena muy bien.",
         createdAt: "2026-04-13T21:05:00.000Z",
       },
       {
         id: "msg-8",
-        sender: "me",
+        senderUserId: MOCK_CONVERSATION_LOCAL_SELLER_ID,
         text: "Excelente, cualquier ajuste me escribes por aqui.",
         createdAt: "2026-04-13T21:20:00.000Z",
       },

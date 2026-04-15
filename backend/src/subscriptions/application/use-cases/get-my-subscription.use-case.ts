@@ -9,7 +9,11 @@ export class GetMySubscriptionUseCase {
     private readonly subscriptions: ISubscriptionRepository,
   ) {}
 
-  execute(userId: string) {
-    return this.subscriptions.findActiveByUserId(userId);
+  async execute(userId: string) {
+    const active = await this.subscriptions.findActiveByUserId(userId);
+    if (active) {
+      return active;
+    }
+    return this.subscriptions.findLatestByUserId(userId);
   }
 }

@@ -20,12 +20,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   accessToken: null,
   isAuthenticated: false,
   isLoading: false,
-  login: (accessToken, user) =>
+  login: (accessToken, user) => {
     set({
       accessToken,
-      user: { ...user, avatarUrl: user.avatarUrl ?? null },
+      user: {
+        ...user,
+        avatarUrl: user.avatarUrl ?? null,
+        referralCode: user.referralCode ?? "",
+        hasReferredBy: user.hasReferredBy ?? false,
+        publicationCount: user.publicationCount ?? 0,
+        publicationActiveCount: user.publicationActiveCount ?? user.publicationCount ?? 0,
+        publicationActiveMax: user.publicationActiveMax ?? user.publicationMax ?? null,
+        publicationBaseActiveMax: user.publicationBaseActiveMax ?? null,
+        publicationMax: user.publicationMax ?? null,
+        isPublicationExempt: user.isPublicationExempt ?? false,
+        referralDirectCount: user.referralDirectCount ?? 0,
+        referralSlotsEarned: user.referralSlotsEarned ?? 0,
+        purchasedPublicationSlots: user.purchasedPublicationSlots ?? 0,
+      },
       isAuthenticated: true,
-    }),
+    });
+    void import("@/stores/conversationsStore").then(({ useConversationsStore }) => {
+      void useConversationsStore.getState().syncFromApi();
+    });
+  },
   setAccessToken: (accessToken) =>
     set({ accessToken, isAuthenticated: !!accessToken }),
   logout: () => {
@@ -39,11 +57,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       void import("@/stores/favoritesStore").then(({ useFavoritesStore }) => {
         useFavoritesStore.getState().reset();
       });
+      void import("@/stores/conversationsStore").then(({ useConversationsStore }) => {
+        useConversationsStore.getState().reset();
+      });
     }
     void import("@/lib/api").then(({ api }) =>
       api.post("/auth/logout", {}, { skipAuthRefresh: true }).catch(() => {}),
     );
   },
-  setUser: (user) => set({ user: { ...user, avatarUrl: user.avatarUrl ?? null } }),
+  setUser: (user) =>
+    set({
+      user: {
+        ...user,
+        avatarUrl: user.avatarUrl ?? null,
+        referralCode: user.referralCode ?? "",
+        hasReferredBy: user.hasReferredBy ?? false,
+        publicationCount: user.publicationCount ?? 0,
+        publicationActiveCount: user.publicationActiveCount ?? user.publicationCount ?? 0,
+        publicationActiveMax: user.publicationActiveMax ?? user.publicationMax ?? null,
+        publicationBaseActiveMax: user.publicationBaseActiveMax ?? null,
+        publicationMax: user.publicationMax ?? null,
+        isPublicationExempt: user.isPublicationExempt ?? false,
+        referralDirectCount: user.referralDirectCount ?? 0,
+        referralSlotsEarned: user.referralSlotsEarned ?? 0,
+        purchasedPublicationSlots: user.purchasedPublicationSlots ?? 0,
+      },
+    }),
   setLoading: (isLoading) => set({ isLoading }),
 }));

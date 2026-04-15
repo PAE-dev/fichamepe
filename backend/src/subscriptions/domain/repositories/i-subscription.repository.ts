@@ -30,6 +30,8 @@ export interface ISubscriptionRepository {
   create(data: CreateSubscriptionInput): Promise<Subscription>;
   findById(id: string): Promise<Subscription | null>;
   findActiveByUserId(userId: string): Promise<Subscription | null>;
+  /** Última fila del usuario (p. ej. pedido pendiente o histórico) cuando no hay activa. */
+  findLatestByUserId(userId: string): Promise<Subscription | null>;
   update(
     id: string,
     patch: SubscriptionUpdatePatch,

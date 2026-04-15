@@ -85,6 +85,11 @@ class EnvironmentVariables {
   @Transform(emptyToUndefined)
   @IsString()
   AWS_S3_BUCKET?: string;
+
+  /** Lista separada por comas; siempre incluye leonardpostillos@gmail.com en lógica de cupo. */
+  @IsOptional()
+  @IsString()
+  REFERRAL_PUBLISH_EXEMPT_EMAILS?: string;
 }
 
 function formatValidationErrors(

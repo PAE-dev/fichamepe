@@ -90,6 +90,7 @@ export function SearchBar({
               if (e.key === "Enter") submit(query);
             }}
             placeholder={PLACEHOLDERS[placeholderIndex]}
+            aria-label="Buscar servicios"
             autoComplete="off"
             className={`min-h-11 w-0 min-w-0 flex-1 border-0 bg-transparent py-3 pl-2 pr-2 ${
               compact ? "text-sm" : "text-base"

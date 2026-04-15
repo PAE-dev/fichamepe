@@ -126,14 +126,18 @@ function ConversacionesContent() {
       active ? "bg-primary text-white shadow-sm" : "text-muted hover:bg-primary/5 hover:text-foreground"
     }`;
 
-  const submitMessage = (event: FormEvent<HTMLFormElement>) => {
+  const submitMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const targetConversation = mobileConversation ?? desktopConversation;
     if (!targetConversation) return;
     const cleaned = draft.trim();
     if (!cleaned) return;
-    sendMessage(targetConversation.id, cleaned);
-    setDraft("");
+    try {
+      await sendMessage(targetConversation.id, cleaned);
+      setDraft("");
+    } catch {
+      /* errores de red / 401 ya gestionados por el cliente API */
+    }
   };
 
   return (

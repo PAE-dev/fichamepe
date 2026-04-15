@@ -7,6 +7,7 @@ import { Modal } from "@heroui/react/modal";
 import { ArrowRight, Layers, LogIn, Megaphone, Sparkles } from "lucide-react";
 import { Button } from "@heroui/react/button";
 import { ServiceCard } from "@/components/cards/ServiceCard";
+import { PublicationSlotsPurchasePanel } from "@/components/cuenta/PublicationSlotsPurchasePanel";
 import { useAuthStore } from "@/store/auth.store";
 import {
   deleteSkill,
@@ -32,6 +33,7 @@ export function CuentaPublicacionesClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
   const [items, setItems] = useState<ServicePublic[]>([]);
   const [loading, setLoading] = useState(() => useAuthStore.getState().isAuthenticated);
   const [loadError, setLoadError] = useState(false);
@@ -112,8 +114,29 @@ export function CuentaPublicacionesClient() {
         {isAuthenticated && !loading && !loadError ? (
           <>
             <p className="mt-3 text-sm font-medium text-foreground">
-              {items.length === 1 ? "1 publicación" : `${items.length} publicaciones`}
+              {items.length === 1 ? "1 ficha en tu cuenta" : `${items.length} fichas en tu cuenta`}{" "}
+              <span className="text-muted">(borradores, revisión, pausadas y activas)</span>
             </p>
+            {user && !user.isPublicationExempt && user.publicationActiveMax != null ? (
+              <p className="mt-1 text-sm text-foreground">
+                <span className="font-semibold tabular-nums">
+                  {user.publicationActiveCount}/{user.publicationActiveMax}
+                </span>{" "}
+                publicaciones <strong className="font-semibold">activas</strong> a la vez
+                {user.isPro ? (
+                  <span className="text-muted"> — plan mensual vigente (hasta 10 o más si ya sumaste cupos).</span>
+                ) : (
+                  <span className="text-muted">
+                    {" "}
+                    — base 3 + hasta 3 por referidos + slots comprados. Suscripción mensual sube el tope.{" "}
+                    <Link href="/cuenta/plan" className="font-medium text-primary underline-offset-2 hover:underline">
+                      Ver planes y cupos
+                    </Link>
+                    .
+                  </span>
+                )}
+              </p>
+            ) : null}
             {toast === "review-submitted" ? (
               <p className="mt-3 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-sm font-medium text-primary">
                 Tu publicación fue enviada a revisión. Te avisaremos cuando esté aprobada o si requiere
@@ -185,7 +208,9 @@ export function CuentaPublicacionesClient() {
           ))}
         </div>
       ) : isEmpty ? (
-        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/[0.07] via-white to-accent/[0.05] px-6 py-14 text-center shadow-sm sm:px-12">
+        <>
+          <PublicationSlotsPurchasePanel className="mb-6" />
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/[0.07] via-white to-accent/[0.05] px-6 py-14 text-center shadow-sm sm:px-12">
           <div className="pointer-events-none absolute -right-16 top-0 h-52 w-52 rounded-full bg-primary/12 blur-3xl" aria-hidden />
           <div className="pointer-events-none absolute -left-10 bottom-0 h-44 w-44 rounded-full bg-accent/15 blur-3xl" aria-hidden />
           <div className="relative mx-auto flex max-w-lg flex-col items-center gap-5">
@@ -221,8 +246,11 @@ export function CuentaPublicacionesClient() {
             </div>
           </div>
         </div>
+        </>
       ) : (
         <>
+          <PublicationSlotsPurchasePanel className="mb-6" />
+
           <div className="mb-5 flex flex-wrap items-center gap-2">
             {FILTERS.map((item) => {
               const active = filter === item.key;
@@ -275,17 +303,20 @@ export function CuentaPublicacionesClient() {
           </div>
 
           <Modal isOpen={!!deleting} onOpenChange={(open) => !open && setDeleting(null)}>
+            <Modal.Trigger className="sr-only" aria-label="Abrir confirmar eliminación">
+              Abrir
+            </Modal.Trigger>
             <Modal.Backdrop isDismissable className="bg-primary-dark/45 backdrop-blur-[2px]">
               <Modal.Container placement="center" size="lg">
-                <Modal.Dialog className="rounded-2xl border border-border bg-white p-0 shadow-xl">
+                <Modal.Dialog className="rounded-2xl border border-border bg-surface p-0 shadow-xl">
                   <Modal.Header className="border-b border-border px-5 py-4">
                     <Modal.Heading className="text-lg font-bold text-foreground">
-                      Eliminar publicación
+                      ¿Eliminar esta habilidad?
                     </Modal.Heading>
                   </Modal.Header>
                   <Modal.Body className="space-y-3 px-5 py-4">
                     <p className="text-sm text-muted">
-                      Esta acción no se puede deshacer. ¿Seguro que quieres eliminar esta publicación?
+                      Se perderán todos los datos. Esta acción no se puede deshacer.
                     </p>
                   </Modal.Body>
                   <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">

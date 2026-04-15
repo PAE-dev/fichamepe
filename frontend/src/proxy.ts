@@ -9,7 +9,6 @@ export function proxy(request: NextRequest) {
 
   const isProtected =
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/onboarding") ||
     pathname.startsWith("/cuenta") ||
     pathname.startsWith("/skills");
 
@@ -33,8 +32,6 @@ export const config = {
     "/",
     "/dashboard",
     "/dashboard/:path*",
-    "/onboarding",
-    "/onboarding/:path*",
     "/cuenta",
     "/cuenta/:path*",
     "/skills",

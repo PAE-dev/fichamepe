@@ -24,9 +24,9 @@ export function ConversationServiceCover({
 
   const frame =
     perspective === "buyer"
-      ? "border-2 border-primary/50"
+      ? "border-2 border-primary/45"
       : perspective === "seller"
-        ? "border-2 border-accent/50"
+        ? "border-2 border-primary/35"
         : "border border-border/70";
 
   return (

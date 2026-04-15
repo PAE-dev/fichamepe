@@ -78,6 +78,22 @@ export class ServiceOrmEntity {
   @Column({ type: 'int', default: 0 })
   viewCount: number;
 
+  @Column({ type: 'int', default: 0 })
+  reviewCount: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 3,
+    scale: 1,
+    default: 0,
+    transformer: {
+      to: (value: number | null | undefined) => value ?? 0,
+      from: (value: string | null): number =>
+        value === null || value === undefined ? 0 : Number(value),
+    },
+  })
+  reviewAverage: number;
+
   @Column({ type: 'simple-array', nullable: true })
   tags: string[] | null;
 

@@ -1,4 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { IUserRepository } from '../../../users/domain/repositories';
+import { USER_REPOSITORY } from '../../../users/users.di-tokens';
 import type { IProfileRepository } from '../../../profiles/domain/repositories/profile.repository.interface';
 import { PROFILE_REPOSITORY } from '../../../profiles/profiles.di-tokens';
 import type { IServiceRepository } from '../../domain/repositories/i-service.repository';
@@ -9,8 +12,12 @@ import {
   type ServiceResponse,
 } from '../mappers/service-response.mapper';
 import { assertTimedPromoValid } from '../service-promo.validation';
-
-const MAX_SERVICES_PER_PROFILE = 10;
+import {
+  isPublicationQuotaExempt,
+  parseReferralPublishExemptEmails,
+  PUBLICATION_EXEMPT_MAX,
+} from '../../../common/referral/publication-quota';
+import { MAX_SERVICE_RECORDS_NONEXEMPT } from '../../../common/publication/publication-slots';
 
 @Injectable()
 export class CreateServiceUseCase {
@@ -19,6 +26,9 @@ export class CreateServiceUseCase {
     private readonly services: IServiceRepository,
     @Inject(PROFILE_REPOSITORY)
     private readonly profiles: IProfileRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly users: IUserRepository,
+    private readonly config: ConfigService,
   ) {}
 
   async execute(
@@ -31,10 +41,24 @@ export class CreateServiceUseCase {
         'Necesitas un perfil publicado antes de crear un servicio',
       );
     }
+    const user = await this.users.findById(userId);
+    if (!user) {
+      throw new BadRequestException('Usuario no encontrado');
+    }
     const count = await this.services.countByProfileId(profile.id);
-    if (count >= MAX_SERVICES_PER_PROFILE) {
+    const exemptEmails = parseReferralPublishExemptEmails(
+      this.config.get<string>('REFERRAL_PUBLISH_EXEMPT_EMAILS'),
+    );
+    const exempt = isPublicationQuotaExempt(user, exemptEmails);
+    if (exempt) {
+      if (count >= PUBLICATION_EXEMPT_MAX) {
+        throw new BadRequestException(
+          `Solo puedes tener hasta ${PUBLICATION_EXEMPT_MAX} servicios activos o guardados`,
+        );
+      }
+    } else if (count >= MAX_SERVICE_RECORDS_NONEXEMPT) {
       throw new BadRequestException(
-        `Solo puedes tener hasta ${MAX_SERVICES_PER_PROFILE} servicios activos o guardados`,
+        `Límite de borradores y fichas en cuenta alcanzado (${MAX_SERVICE_RECORDS_NONEXEMPT} máximo). Elimina borradores viejos o escribe a soporte.`,
       );
     }
     const listPrice = dto.listPrice ?? null;

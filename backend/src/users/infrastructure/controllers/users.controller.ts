@@ -6,6 +6,7 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/infrastructure/guards/jwt-auth.guard';
@@ -13,7 +14,9 @@ import { CurrentUser } from '../../../auth/infrastructure/decorators/current-use
 import type { RequestUser } from '../../../auth/domain/services/auth-token.service.interface';
 import { GetUserByIdUseCase } from '../../application/use-cases/get-user-by-id.use-case';
 import { UpdateUserUseCase } from '../../application/use-cases/update-user.use-case';
+import { ApplyReferralUseCase } from '../../application/use-cases/apply-referral.use-case';
 import { UpdateUserBodyDto } from '../../application/dto/update-user.dto';
+import { ApplyReferralBodyDto } from '../../application/dto/apply-referral.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -21,7 +24,16 @@ export class UsersController {
   constructor(
     private readonly getUserById: GetUserByIdUseCase,
     private readonly updateUser: UpdateUserUseCase,
+    private readonly applyReferral: ApplyReferralUseCase,
   ) {}
+
+  @Post('me/referral')
+  applyReferralCode(
+    @CurrentUser() user: RequestUser,
+    @Body() body: ApplyReferralBodyDto,
+  ) {
+    return this.applyReferral.execute(user.userId, body.code);
+  }
 
   @Get(':id')
   getOne(

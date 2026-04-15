@@ -14,6 +14,8 @@ export type ServiceResponse = {
   status: Service['status'];
   isActive: boolean;
   viewCount: number;
+  reviewCount: number;
+  reviewAverage: number;
   tags: string[];
   category: string;
   deliveryMode: string;
@@ -49,6 +51,8 @@ export function toServiceResponse(s: Service): ServiceResponse {
     status: s.status,
     isActive: s.status === 'ACTIVA',
     viewCount: s.viewCount,
+    reviewCount: s.reviewCount ?? 0,
+    reviewAverage: s.reviewAverage ?? 0,
     tags: s.tags,
     category: s.category,
     deliveryMode: s.deliveryMode,

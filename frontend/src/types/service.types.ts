@@ -34,6 +34,9 @@ export type ServicePublic = {
   status: ServiceStatus;
   isActive: boolean;
   viewCount: number;
+  /** Agregados de reseñas de esta publicación (compradores). */
+  reviewCount?: number;
+  reviewAverage?: number;
   tags: string[];
   category: string;
   deliveryMode: string;

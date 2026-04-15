@@ -17,6 +17,8 @@ import type { ServicePublic } from "@/types/service.types";
 
 type ServiceCardProps = {
   service: ServicePublic;
+  /** Portada above-the-fold: prioriza carga (evita aviso LCP de Next/Image). */
+  coverPriority?: boolean;
   /** Oculta favoritos (p. ej. en “mis publicaciones”). */
   hideFavorite?: boolean;
   /** Muestra “Pausado” si el servicio está inactivo. */
@@ -70,6 +72,7 @@ function publicationStatusChip(service: ServicePublic): {
 
 export function ServiceCard({
   service,
+  coverPriority,
   hideFavorite,
   showActiveStatus,
   onEdit,
@@ -79,8 +82,11 @@ export function ServiceCard({
   onDelete,
 }: ServiceCardProps) {
   const profile = service.profile;
-  const rating = profile?.rating ?? 4.6;
-  const reviews = profile?.reviewCount ?? 12;
+  const hasServiceReviews = (service.reviewCount ?? 0) > 0;
+  const rating = hasServiceReviews
+    ? (service.reviewAverage ?? 0)
+    : (profile?.rating ?? 4.6);
+  const reviews = hasServiceReviews ? (service.reviewCount ?? 0) : (profile?.reviewCount ?? 12);
   const categoryLabel =
     SKILL_CATEGORIES.find((c) => c.id === service.category)?.label ??
     service.tags[0] ??
@@ -101,6 +107,9 @@ export function ServiceCard({
               src={service.coverImageUrl}
               alt={service.title}
               fill
+              priority={Boolean(coverPriority)}
+              loading={coverPriority ? "eager" : "lazy"}
+              fetchPriority={coverPriority ? "high" : undefined}
               className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
               sizes="(max-width: 640px) 100vw, (max-width: 1536px) 50vw, 33vw"
             />
@@ -286,10 +295,11 @@ export function ServiceCard({
           </p>
           {showActions ? (
             <Dropdown>
-              <Dropdown.Trigger aria-label="Acciones de publicación">
-                <div className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-white text-muted transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-                  <MoreVertical className="size-4" aria-hidden />
-                </div>
+              <Dropdown.Trigger
+                aria-label="Acciones de publicación"
+                className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-surface text-muted transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              >
+                <MoreVertical className="size-4" aria-hidden />
               </Dropdown.Trigger>
               <Dropdown.Popover placement="bottom end">
                 <Dropdown.Menu aria-label="Acciones de habilidad">
@@ -317,12 +327,19 @@ export function ServiceCard({
                       </span>
                     </Dropdown.Item>
                   ) : null}
-                  {(service.status === "BORRADOR" || service.status === "REQUIERE_CAMBIOS") &&
-                  onPublish ? (
-                    <Dropdown.Item key="publish" className="cursor-pointer" onAction={() => onPublish(service)}>
+                  {service.status === "BORRADOR" && onPublish ? (
+                    <Dropdown.Item key="publish-draft" className="cursor-pointer" onAction={() => onPublish(service)}>
                       <span className="inline-flex items-center gap-2">
                         <Play className="size-4" aria-hidden />
-                        Enviar a revisión
+                        Publicar
+                      </span>
+                    </Dropdown.Item>
+                  ) : null}
+                  {service.status === "REQUIERE_CAMBIOS" && onPublish ? (
+                    <Dropdown.Item key="publish-fix" className="cursor-pointer" onAction={() => onPublish(service)}>
+                      <span className="inline-flex items-center gap-2">
+                        <Play className="size-4" aria-hidden />
+                        Reenviar a revisión
                       </span>
                     </Dropdown.Item>
                   ) : null}
@@ -345,8 +362,9 @@ export function ServiceCard({
 
   return (
     <motion.article
-      whileHover={{ y: -4, boxShadow: "0 12px 24px rgba(0,0,0,0.10)" }}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white"
+      whileHover={{ y: -4 }}
+      transition={{ type: "spring", stiffness: 420, damping: 28 }}
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-shadow duration-300 hover:shadow-md"
     >
       {content}
     </motion.article>

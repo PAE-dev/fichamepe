@@ -30,6 +30,8 @@ function toDomain(row: ServiceOrmEntity, withProfile: boolean): Service {
   s.status = row.status;
   s.isActive = row.status === 'ACTIVA';
   s.viewCount = row.viewCount;
+  s.reviewCount = row.reviewCount ?? 0;
+  s.reviewAverage = row.reviewAverage ?? 0;
   s.tags = tagsFromOrm(row.tags);
   s.category = row.category;
   s.deliveryMode = row.deliveryMode;
@@ -199,6 +201,8 @@ export class ServiceTypeOrmRepository implements IServiceRepository {
       coverImageUrl: data.coverImageUrl ?? null,
       status: data.status ?? 'BORRADOR',
       viewCount: data.viewCount ?? 0,
+      reviewCount: data.reviewCount ?? 0,
+      reviewAverage: data.reviewAverage ?? 0,
       tags: data.tags?.length ? data.tags : [],
       category: data.category ?? 'other',
       deliveryMode: data.deliveryMode ?? 'digital',
@@ -251,6 +255,12 @@ export class ServiceTypeOrmRepository implements IServiceRepository {
     if (data.status !== undefined) {
       row.status = data.status;
     }
+    if (data.reviewCount !== undefined) {
+      row.reviewCount = data.reviewCount;
+    }
+    if (data.reviewAverage !== undefined) {
+      row.reviewAverage = data.reviewAverage;
+    }
     if (data.tags !== undefined) {
       row.tags = data.tags;
     }
@@ -298,5 +308,32 @@ export class ServiceTypeOrmRepository implements IServiceRepository {
     return this.repo.count({
       where: { profile: { id: profileId } },
     });
+  }
+
+  async countActiveByProfileId(profileId: string): Promise<number> {
+    return this.repo.count({
+      where: { profile: { id: profileId }, status: 'ACTIVA' },
+    });
+  }
+
+  async findActiveServiceIdsByProfileIdOrderedForReconciliation(
+    profileId: string,
+  ): Promise<string[]> {
+    const rows = await this.repo
+      .createQueryBuilder('svc')
+      .select('svc.id', 'id')
+      .where('svc.profileId = :profileId', { profileId })
+      .andWhere('svc.status = :status', { status: 'ACTIVA' })
+      .orderBy('COALESCE(svc.reviewedAt, svc.createdAt)', 'ASC')
+      .addOrderBy('svc.id', 'ASC')
+      .getRawMany<{ id: string }>();
+    return rows.map((r) => r.id);
+  }
+
+  async pauseServicesByIds(ids: string[]): Promise<void> {
+    if (!ids.length) {
+      return;
+    }
+    await this.repo.update({ id: In(ids) }, { status: 'PAUSADA' });
   }
 }

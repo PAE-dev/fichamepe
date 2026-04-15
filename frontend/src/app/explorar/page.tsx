@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useDebounce } from "use-debounce";
 import { Button } from "@heroui/react/button";
 import { Card } from "@heroui/react/card";
 import { Checkbox } from "@heroui/react/checkbox";
 import { CheckboxGroup } from "@heroui/react/checkbox-group";
+import { Label } from "@heroui/react/label";
 import { Slider } from "@heroui/react/slider";
 import { Switch } from "@heroui/react/switch";
 import { BottomSheet } from "@/components/mobile/BottomSheet";
@@ -97,6 +98,11 @@ function FiltersContent({
   maxHourly: number;
   onMaxHourlyChange: (v: number) => void;
 }) {
+  const categoryLabelId = useId();
+  const categorySelectId = useId();
+  const availabilityLabelId = useId();
+  const priceSliderLabelId = useId();
+
   const skillsList: SkillRow[] = useMemo(() => {
     const flat = skillsGrouped.flatMap((g) => g.skills);
     if (!categoryKey || !MACRO_SLUG_SET.has(categoryKey)) {
@@ -111,16 +117,12 @@ function FiltersContent({
   return (
     <div className="flex flex-col">
       <div className="mb-6 border-b border-[#F3F4F6] pb-6">
-        <label
-          id="category-label"
-          htmlFor="category-select"
-          className={filterLabelClass}
-        >
+        <label id={categoryLabelId} htmlFor={categorySelectId} className={filterLabelClass}>
           Categoría
         </label>
         <select
-          id="category-select"
-          aria-labelledby="category-label"
+          id={categorySelectId}
+          aria-labelledby={categoryLabelId}
           value={categoryKey}
           onChange={(e) => onCategoryChange(e.target.value)}
           className="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-2 focus:ring-primary/25"
@@ -140,7 +142,7 @@ function FiltersContent({
           onChange={(v) => onSkillIdsChange(v as string[])}
           className="flex max-h-64 flex-col gap-2 overflow-y-auto"
         >
-          <span className={filterLabelClass}>Habilidades</span>
+          <Label className={filterLabelClass}>Habilidades</Label>
           {skillsList.length === 0 ? (
             <p className="text-xs text-muted">No hay habilidades en esta vista.</p>
           ) : (
@@ -157,11 +159,13 @@ function FiltersContent({
       </div>
 
       <div className="mb-6 border-b border-[#F3F4F6] pb-6">
-        <div className={filterLabelClass}>Disponibilidad</div>
+        <Label id={availabilityLabelId} className={filterLabelClass}>
+          Disponibilidad
+        </Label>
         <Switch
           isSelected={availableOnly}
           onChange={onAvailableChange}
-          aria-label="Solo freelancers disponibles"
+          aria-labelledby={availabilityLabelId}
           className="flex-row-reverse gap-2"
         >
           <Switch.Control>
@@ -174,7 +178,9 @@ function FiltersContent({
       </div>
 
       <div>
-        <div className={filterLabelClass}>Precio máx. / hora</div>
+        <Label id={priceSliderLabelId} className={filterLabelClass}>
+          Precio máx. / hora
+        </Label>
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-accent">
             S/ {maxHourly}
@@ -189,6 +195,7 @@ function FiltersContent({
             const next = Array.isArray(v) ? v[0] : v;
             if (typeof next === "number") onMaxHourlyChange(next);
           }}
+          aria-labelledby={priceSliderLabelId}
           className="w-full"
         >
           <Slider.Track className="relative h-1.5 rounded-full bg-border">
@@ -448,8 +455,12 @@ export default function ExplorarPage() {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
             {isLoading
               ? Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} />)
-              : filteredServices.map((service) => (
-                  <ServiceCard key={service.id} service={service} />
+              : filteredServices.map((service, index) => (
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    coverPriority={index < 2}
+                  />
                 ))}
           </div>
 

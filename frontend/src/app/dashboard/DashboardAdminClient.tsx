@@ -400,6 +400,9 @@ export function DashboardAdminClient() {
       ) : null}
 
       <Modal isOpen={!!rejecting} onOpenChange={(open) => !open && setRejecting(null)}>
+        <Modal.Trigger className="sr-only" aria-label="Abrir correcciones">
+          Abrir
+        </Modal.Trigger>
         <Modal.Backdrop isDismissable className="bg-primary-dark/45 backdrop-blur-[2px]">
           <Modal.Container placement="center" size="lg">
             <Modal.Dialog className="rounded-2xl border border-border bg-white p-0 shadow-xl">

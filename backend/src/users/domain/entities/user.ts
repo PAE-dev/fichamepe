@@ -15,6 +15,13 @@ export class User {
   isPro: boolean;
   proExpiresAt: Date | null;
   tokenBalance: number;
+  referralCode: string;
+  referredByUserId: string | null;
+  referralMigrationCredits: number;
+  /** Cupos ganados por referidos (incremental; al leer se aplica tope en lógica de cupo). */
+  referralSlotsEarned: number;
+  /** Slots permanentes comprados (suma de órdenes cumplidas). */
+  purchasedPublicationSlots: number;
   createdAt: Date;
   updatedAt: Date;
 }

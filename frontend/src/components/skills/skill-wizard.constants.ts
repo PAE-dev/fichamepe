@@ -1,3 +1,17 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  Clapperboard,
+  Globe2,
+  Laptop,
+  MapPin,
+  MessageSquare,
+  Palette,
+  Smartphone,
+  SunMedium,
+  Tag,
+  Upload,
+  Video,
+} from "lucide-react";
 import type { ServiceStatus } from "@/types/service.types";
 
 export const SKILL_WIZARD_STEPS = ["Lo básico", "Los detalles", "Vista previa"] as const;
@@ -9,16 +23,20 @@ export const MAX_TAGS = 5;
 export const MAX_TAG_LENGTH = 20;
 export const MIN_PRICE = 5;
 
-export const SKILL_CATEGORIES = [
-  { id: "tech", label: "Tecnología" },
-  { id: "design", label: "Diseño" },
-  { id: "content", label: "Contenido & Redes" },
-  { id: "language", label: "Idiomas" },
-  { id: "entertainment", label: "Entretenimiento" },
-  { id: "advice", label: "Asesoría & Opinión" },
-  { id: "lifestyle", label: "Estilo de vida" },
-  { id: "other", label: "Otro" },
-] as const;
+export const SKILL_CATEGORIES: ReadonlyArray<{
+  id: string;
+  label: string;
+  Icon: LucideIcon;
+}> = [
+  { id: "tech", label: "Tecnología", Icon: Laptop },
+  { id: "design", label: "Diseño", Icon: Palette },
+  { id: "content", label: "Contenido & Redes", Icon: Smartphone },
+  { id: "language", label: "Idiomas", Icon: Globe2 },
+  { id: "entertainment", label: "Entretenimiento", Icon: Clapperboard },
+  { id: "advice", label: "Asesoría & Opinión", Icon: MessageSquare },
+  { id: "lifestyle", label: "Estilo de vida", Icon: SunMedium },
+  { id: "other", label: "Otro", Icon: Tag },
+];
 
 export const TAG_SUGGESTIONS_BY_CATEGORY: Record<string, string[]> = {
   tech: ["web", "apps", "automatización", "IA", "soporte", "código"],
@@ -31,12 +49,16 @@ export const TAG_SUGGESTIONS_BY_CATEGORY: Record<string, string[]> = {
   other: [],
 };
 
-export const DELIVERY_MODES = [
-  { id: "digital", label: "100% Digital" },
-  { id: "videocall", label: "Videollamada" },
-  { id: "chat", label: "Por chat / mensajes" },
-  { id: "presencial", label: "Presencial" },
-] as const;
+export const DELIVERY_MODES: ReadonlyArray<{
+  id: string;
+  label: string;
+  Icon: LucideIcon;
+}> = [
+  { id: "digital", label: "100% Digital", Icon: Upload },
+  { id: "videocall", label: "Videollamada", Icon: Video },
+  { id: "chat", label: "Por chat / mensajes", Icon: MessageSquare },
+  { id: "presencial", label: "Presencial", Icon: MapPin },
+];
 
 export const DELIVERY_TIMES = [
   "Mismo día",

@@ -12,12 +12,14 @@ import {
   toServiceResponse,
   type ServiceResponse,
 } from '../mappers/service-response.mapper';
+import { PublicationSlotsAvailabilityService } from '../services/publication-slots-availability.service';
 
 @Injectable()
 export class SetServiceStatusUseCase {
   constructor(
     @Inject(SERVICE_REPOSITORY)
     private readonly services: IServiceRepository,
+    private readonly publicationSlots: PublicationSlotsAvailabilityService,
   ) {}
 
   async execute(
@@ -65,6 +67,10 @@ export class SetServiceStatusUseCase {
           'Solo puedes reactivar publicaciones pausadas',
         );
       }
+      await this.publicationSlots.assertMayActivateOneMore(
+        userId,
+        existing.profileId,
+      );
     } else if (status === 'BORRADOR') {
       if (existing.status === 'ACTIVA') {
         throw new BadRequestException(

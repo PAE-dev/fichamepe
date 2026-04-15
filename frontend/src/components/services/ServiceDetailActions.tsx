@@ -11,6 +11,7 @@ import {
 import { useAuthModals } from "@/components/auth/auth-modals-context";
 import { useAuthStore } from "@/store/auth.store";
 import { useConversationsStore } from "@/stores/conversationsStore";
+import { parseApiErrorMessage } from "@/lib/api/auth.api";
 
 const REPORT_REASON_OPTIONS: Array<{ value: ServiceReportReason; label: string }> = [
   { value: "fraud", label: "Posible estafa o cobro engañoso" },
@@ -59,26 +60,32 @@ export function ServiceDetailActions({ service }: ServiceDetailActionsProps) {
     return window.location.href;
   }, [service.id]);
 
-  const handleContact = () => {
+  const handleContact = async () => {
     if (!isAuthenticated) {
       openLogin();
       return;
     }
-    openOrCreateConversationFromService({
-      serviceId: service.id,
-      serviceTitle: service.title,
-      serviceCoverImageUrl: service.coverImageUrl ?? null,
-      servicePrice: service.price ?? null,
-      servicePreviousPrice: service.previousPrice ?? null,
-      serviceCategory: service.tags?.[0] ?? service.category ?? null,
-      serviceDeliveryTime: service.deliveryTime ?? null,
-      participant: {
-        id: service.userId,
-        fullName: participantName,
-        avatarUrl: service.profile?.avatarUrl ?? null,
-      },
-    });
-    router.push("/conversaciones?vista=consultas");
+    try {
+      await openOrCreateConversationFromService({
+        serviceId: service.id,
+        serviceTitle: service.title,
+        serviceCoverImageUrl: service.coverImageUrl ?? null,
+        servicePrice: service.price ?? null,
+        servicePreviousPrice: service.previousPrice ?? null,
+        serviceCategory: service.tags?.[0] ?? service.category ?? null,
+        serviceDeliveryTime: service.deliveryTime ?? null,
+        participant: {
+          id: service.userId,
+          fullName: participantName,
+          avatarUrl: service.profile?.avatarUrl ?? null,
+        },
+      });
+      router.push("/conversaciones?vista=consultas");
+    } catch (e: unknown) {
+      window.alert(
+        parseApiErrorMessage(e, "No pudimos abrir la conversación. Intenta de nuevo."),
+      );
+    }
   };
 
   const handleShare = async () => {

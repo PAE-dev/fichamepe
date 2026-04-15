@@ -38,8 +38,14 @@ export function enrichService(service: ServicePublic): ServicePublic {
     profile: service.profile
       ? {
           ...service.profile,
-          rating: service.profile.rating ?? Number(generatedRating.toFixed(1)),
-          reviewCount: service.profile.reviewCount ?? generatedReviews,
+          rating:
+            (service.reviewCount ?? 0) > 0
+              ? (service.reviewAverage ?? 0)
+              : (service.profile.rating ?? Number(generatedRating.toFixed(1))),
+          reviewCount:
+            (service.reviewCount ?? 0) > 0
+              ? (service.reviewCount ?? 0)
+              : (service.profile.reviewCount ?? generatedReviews),
           responseTimeHours: service.profile.responseTimeHours ?? 1 + (hash % 4),
           isVerified: service.profile.isVerified ?? hash % 2 === 0,
         }

@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { ServicesModule } from '../services/services.module';
 import { ActivateSubscriptionUseCase } from './application/use-cases/activate-subscription.use-case';
 import { CreatePendingSubscriptionUseCase } from './application/use-cases/create-pending-subscription.use-case';
 import { ExpireSubscriptionUseCase } from './application/use-cases/expire-subscription.use-case';
@@ -17,6 +18,7 @@ import { REPOSITORY_TOKEN } from './subscriptions.di-tokens';
     TypeOrmModule.forFeature([SubscriptionOrmEntity]),
     UsersModule,
     AuthModule,
+    forwardRef(() => ServicesModule),
   ],
   controllers: [SubscriptionsController],
   providers: [

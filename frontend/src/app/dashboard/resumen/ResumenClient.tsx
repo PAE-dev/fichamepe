@@ -8,7 +8,6 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -48,8 +47,12 @@ export function ResumenClient() {
   const [state, setState] = useState<ViewState>({ status: "loading" });
   const usersChartRef = useRef<HTMLDivElement | null>(null);
   const servicesChartRef = useRef<HTMLDivElement | null>(null);
-  const [usersChartReady, setUsersChartReady] = useState(false);
-  const [servicesChartReady, setServicesChartReady] = useState(false);
+  const [usersChartSize, setUsersChartSize] = useState({ width: 0, height: 0 });
+  const [servicesChartSize, setServicesChartSize] = useState({ width: 0, height: 0 });
+  const usersInvalidLogged = useRef(false);
+  const usersReadyLogged = useRef(false);
+  const servicesInvalidLogged = useRef(false);
+  const servicesReadyLogged = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -72,13 +75,61 @@ export function ResumenClient() {
     const node = usersChartRef.current;
     if (!node) return;
     if (typeof ResizeObserver === "undefined") {
-      setUsersChartReady(true);
+      setUsersChartSize({ width: 640, height: 256 });
       return;
     }
     const ro = new ResizeObserver((entries) => {
       const cr = entries[0]?.contentRect;
       if (!cr) return;
-      if (cr.width > 0 && cr.height > 0) setUsersChartReady(true);
+      const width = Math.max(0, Math.floor(cr.width));
+      const height = Math.max(0, Math.floor(cr.height));
+      setUsersChartSize({ width, height });
+      if ((width <= 0 || height <= 0) && !usersInvalidLogged.current) {
+        usersInvalidLogged.current = true;
+        // #region agent log
+        fetch("http://127.0.0.1:7907/ingest/4ab00c66-c014-4f05-821f-8a55da88cb2b", {
+          method: "POST",
+          mode: "no-cors",
+          keepalive: true,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "943a62",
+          },
+          body: JSON.stringify({
+            sessionId: "943a62",
+            runId: "run-2",
+            hypothesisId: "H9",
+            location: "src/app/dashboard/resumen/ResumenClient.tsx:users.ResizeObserver",
+            message: "users-chart-invalid-size",
+            data: { width, height },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
+      }
+      if (width > 0 && height > 0 && !usersReadyLogged.current) {
+        usersReadyLogged.current = true;
+        // #region agent log
+        fetch("http://127.0.0.1:7907/ingest/4ab00c66-c014-4f05-821f-8a55da88cb2b", {
+          method: "POST",
+          mode: "no-cors",
+          keepalive: true,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "943a62",
+          },
+          body: JSON.stringify({
+            sessionId: "943a62",
+            runId: "run-2",
+            hypothesisId: "H9",
+            location: "src/app/dashboard/resumen/ResumenClient.tsx:users.ResizeObserver",
+            message: "users-chart-ready-size",
+            data: { width, height },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
+      }
     });
     ro.observe(node);
     return () => ro.disconnect();
@@ -88,13 +139,61 @@ export function ResumenClient() {
     const node = servicesChartRef.current;
     if (!node) return;
     if (typeof ResizeObserver === "undefined") {
-      setServicesChartReady(true);
+      setServicesChartSize({ width: 640, height: 256 });
       return;
     }
     const ro = new ResizeObserver((entries) => {
       const cr = entries[0]?.contentRect;
       if (!cr) return;
-      if (cr.width > 0 && cr.height > 0) setServicesChartReady(true);
+      const width = Math.max(0, Math.floor(cr.width));
+      const height = Math.max(0, Math.floor(cr.height));
+      setServicesChartSize({ width, height });
+      if ((width <= 0 || height <= 0) && !servicesInvalidLogged.current) {
+        servicesInvalidLogged.current = true;
+        // #region agent log
+        fetch("http://127.0.0.1:7907/ingest/4ab00c66-c014-4f05-821f-8a55da88cb2b", {
+          method: "POST",
+          mode: "no-cors",
+          keepalive: true,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "943a62",
+          },
+          body: JSON.stringify({
+            sessionId: "943a62",
+            runId: "run-2",
+            hypothesisId: "H9",
+            location: "src/app/dashboard/resumen/ResumenClient.tsx:services.ResizeObserver",
+            message: "services-chart-invalid-size",
+            data: { width, height },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
+      }
+      if (width > 0 && height > 0 && !servicesReadyLogged.current) {
+        servicesReadyLogged.current = true;
+        // #region agent log
+        fetch("http://127.0.0.1:7907/ingest/4ab00c66-c014-4f05-821f-8a55da88cb2b", {
+          method: "POST",
+          mode: "no-cors",
+          keepalive: true,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "943a62",
+          },
+          body: JSON.stringify({
+            sessionId: "943a62",
+            runId: "run-2",
+            hypothesisId: "H9",
+            location: "src/app/dashboard/resumen/ResumenClient.tsx:services.ResizeObserver",
+            message: "services-chart-ready-size",
+            data: { width, height },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
+      }
     });
     ro.observe(node);
     return () => ro.disconnect();
@@ -187,16 +286,19 @@ export function ResumenClient() {
             </p>
           </div>
           <div ref={usersChartRef} className="h-64 w-full">
-            {usersChartReady ? (
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
-                <LineChart data={chartUsers} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+            {usersChartSize.width > 0 && usersChartSize.height > 0 ? (
+              <LineChart
+                width={usersChartSize.width}
+                height={usersChartSize.height}
+                data={chartUsers}
+                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={2} dot={false} />
+              </LineChart>
             ) : (
               <div className="h-full w-full animate-pulse rounded-xl bg-surface-elevated" />
             )}
@@ -214,16 +316,19 @@ export function ResumenClient() {
             </p>
           </div>
           <div ref={servicesChartRef} className="h-64 w-full">
-            {servicesChartReady ? (
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
-                <BarChart data={chartServices} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#16a34a" radius={[10, 10, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            {servicesChartSize.width > 0 && servicesChartSize.height > 0 ? (
+              <BarChart
+                width={servicesChartSize.width}
+                height={servicesChartSize.height}
+                data={chartServices}
+                margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.08)" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="value" fill="#16a34a" radius={[10, 10, 0, 0]} />
+              </BarChart>
             ) : (
               <div className="h-full w-full animate-pulse rounded-xl bg-surface-elevated" />
             )}

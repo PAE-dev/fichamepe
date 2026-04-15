@@ -76,6 +76,15 @@ export class SubscriptionTypeOrmRepository implements ISubscriptionRepository {
     return row ? toDomain(row) : null;
   }
 
+  async findLatestByUserId(userId: string): Promise<Subscription | null> {
+    const row = await this.repo.findOne({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+      relations: ['user'],
+    });
+    return row ? toDomain(row) : null;
+  }
+
   async update(
     id: string,
     patch: SubscriptionUpdatePatch,

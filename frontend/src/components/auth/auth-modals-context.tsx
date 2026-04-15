@@ -4,7 +4,10 @@ import { createContext, useContext } from "react";
 
 export type AuthModalsContextValue = {
   openLogin: () => void;
-  openRegister: (opts?: { role?: "client" | "freelancer" }) => void;
+  openRegister: (opts?: {
+    role?: "client" | "freelancer";
+    referralCode?: string | null;
+  }) => void;
   openForgotPassword: () => void;
 };
 

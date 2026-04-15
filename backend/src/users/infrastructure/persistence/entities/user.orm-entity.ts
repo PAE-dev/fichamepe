@@ -40,6 +40,21 @@ export class UserOrmEntity {
   @Column({ type: 'int', default: 0 })
   tokenBalance: number;
 
+  @Column({ type: 'varchar', length: 16, unique: true })
+  referralCode: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  referredByUserId: string | null;
+
+  @Column({ type: 'int', default: 0 })
+  referralMigrationCredits: number;
+
+  @Column({ type: 'int', default: 0 })
+  referralSlotsEarned: number;
+
+  @Column({ type: 'int', default: 0 })
+  purchasedPublicationSlots: number;
+
   @Column({ type: 'varchar', nullable: true })
   passwordResetToken: string | null;
 

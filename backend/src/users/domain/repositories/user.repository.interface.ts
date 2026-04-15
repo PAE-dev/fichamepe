@@ -5,6 +5,7 @@ export interface CreateUserData {
   passwordHash: string;
   fullName?: string | null;
   role?: UserRole;
+  referredByUserId?: string | null;
 }
 
 export type UserUpdatePatch = Partial<
@@ -23,6 +24,12 @@ export type UserUpdatePatch = Partial<
 export interface IUserRepository {
   findByEmail(email: string): Promise<User | null>;
   findById(id: string): Promise<User | null>;
+  findByReferralCode(code: string): Promise<User | null>;
+  countUsersReferredBy(referrerUserId: string): Promise<number>;
+  /**
+   * Asigna referidor solo si aún no tenía uno. Devuelve true si se actualizó.
+   */
+  applyReferredByIfEmpty(userId: string, referrerUserId: string): Promise<boolean>;
   create(data: CreateUserData): Promise<User>;
   update(id: string, patch: UserUpdatePatch): Promise<User | null>;
   /** Devuelve true si existía un usuario con ese correo. */
@@ -33,4 +40,13 @@ export interface IUserRepository {
   ): Promise<boolean>;
   /** Actualiza contraseña y borra token si el token es válido y no ha expirado. */
   consumePasswordReset(token: string, newPasswordHash: string): Promise<boolean>;
+
+  /** Suma 1 al contador de cupos por referido del referidor, sin superar `cap`. */
+  incrementReferralSlotsEarnedCapped(
+    referrerUserId: string,
+    cap: number,
+  ): Promise<void>;
+
+  /** Suma slots comprados cumplidos al usuario. */
+  incrementPurchasedPublicationSlots(userId: string, delta: number): Promise<void>;
 }

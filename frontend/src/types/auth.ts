@@ -11,6 +11,25 @@ export type AuthUser = {
   isPro: boolean;
   proExpiresAt: string | null;
   tokenBalance: number;
+  referralCode: string;
+  hasReferredBy: boolean;
+  /** Total de fichas (todos los estados). */
+  publicationCount: number;
+  /** Solo estado ACTIVA (visibles en vitrina). */
+  publicationActiveCount: number;
+  /** Tope de ACTIVA según plan, referidos y compras. */
+  publicationActiveMax: number | null;
+  /** Tope de ACTIVA sin el impulso del Plan Pro (base + referidos + compras + migración). */
+  publicationBaseActiveMax: number | null;
+  /** null = sin tope práctico (admin / cuenta exenta). Mismo valor que publicationActiveMax si aplica. */
+  publicationMax: number | null;
+  isPublicationExempt: boolean;
+  /** Cuántas personas se registraron con tu código (informativo). */
+  referralDirectCount: number;
+  /** Cupos ganados por referidos (el tope aplicado en servidor es 3). */
+  referralSlotsEarned: number;
+  /** Slots comprados de por vida (suma cumplida). */
+  purchasedPublicationSlots: number;
   createdAt: string;
   updatedAt: string;
 };

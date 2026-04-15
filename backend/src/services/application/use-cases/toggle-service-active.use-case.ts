@@ -11,12 +11,14 @@ import {
   toServiceResponse,
   type ServiceResponse,
 } from '../mappers/service-response.mapper';
+import { PublicationSlotsAvailabilityService } from '../services/publication-slots-availability.service';
 
 @Injectable()
 export class ToggleServiceActiveUseCase {
   constructor(
     @Inject(SERVICE_REPOSITORY)
     private readonly services: IServiceRepository,
+    private readonly publicationSlots: PublicationSlotsAvailabilityService,
   ) {}
 
   async execute(id: string, userId: string): Promise<ServiceResponse> {
@@ -30,6 +32,12 @@ export class ToggleServiceActiveUseCase {
     if (existing.status !== 'ACTIVA' && existing.status !== 'PAUSADA') {
       throw new BadRequestException(
         'Solo puedes alternar publicaciones activas o pausadas',
+      );
+    }
+    if (existing.status === 'PAUSADA') {
+      await this.publicationSlots.assertMayActivateOneMore(
+        userId,
+        existing.profileId,
       );
     }
     const updated = await this.services.update(id, {

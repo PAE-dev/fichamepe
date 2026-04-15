@@ -32,8 +32,8 @@ export function ConversationListItem({
       onClick={onClick}
       className={`w-full rounded-xl border p-3 text-left transition ${
         isActive
-          ? "border-primary/30 bg-primary/5"
-          : "border-border bg-white hover:border-primary/30 hover:bg-primary/[0.03]"
+          ? "border-primary/30 bg-primary/[0.06]"
+          : "border-border bg-white hover:border-primary/25 hover:bg-primary/[0.03]"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -54,8 +54,8 @@ export function ConversationListItem({
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                     perspective === "buyer"
-                      ? "bg-primary/12 text-primary"
-                      : "bg-accent/15 text-accent"
+                      ? "border border-primary/25 bg-primary/[0.09] text-primary"
+                      : "border border-primary/30 bg-primary/[0.14] text-primary-dark"
                   }`}
                 >
                   {perspectiveLabel(perspective)}

@@ -39,4 +39,15 @@ export interface IServiceRepository {
   incrementViewCount(id: string): Promise<void>;
 
   countByProfileId(profileId: string): Promise<number>;
+
+  countActiveByProfileId(profileId: string): Promise<number>;
+
+  /**
+   * IDs ACTIVA ordenados para reconciliación: más antiguas primero (se conservan las primeras `max`).
+   */
+  findActiveServiceIdsByProfileIdOrderedForReconciliation(
+    profileId: string,
+  ): Promise<string[]>;
+
+  pauseServicesByIds(ids: string[]): Promise<void>;
 }

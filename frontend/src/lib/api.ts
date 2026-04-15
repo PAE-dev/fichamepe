@@ -122,7 +122,21 @@ export async function bootstrapSessionFromCookies(): Promise<boolean> {
     useAuthStore.getState().setAccessToken(data.accessToken);
     const { data: user } = await api.get<AuthUser>("/auth/me");
     useAuthStore.setState({
-      user: { ...user, avatarUrl: user.avatarUrl ?? null },
+      user: {
+        ...user,
+        avatarUrl: user.avatarUrl ?? null,
+        referralCode: user.referralCode ?? "",
+        hasReferredBy: user.hasReferredBy ?? false,
+        publicationCount: user.publicationCount ?? 0,
+        publicationActiveCount: user.publicationActiveCount ?? user.publicationCount ?? 0,
+        publicationActiveMax: user.publicationActiveMax ?? user.publicationMax ?? null,
+        publicationBaseActiveMax: user.publicationBaseActiveMax ?? null,
+        publicationMax: user.publicationMax ?? null,
+        isPublicationExempt: user.isPublicationExempt ?? false,
+        referralDirectCount: user.referralDirectCount ?? 0,
+        referralSlotsEarned: user.referralSlotsEarned ?? 0,
+        purchasedPublicationSlots: user.purchasedPublicationSlots ?? 0,
+      },
       isAuthenticated: true,
     });
     return true;

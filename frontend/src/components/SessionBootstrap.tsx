@@ -9,7 +9,15 @@ export function SessionBootstrap() {
   useEffect(() => {
     if (ran.current) return;
     ran.current = true;
-    if (useAuthStore.getState().accessToken) return;
+    if (useAuthStore.getState().accessToken) {
+      void import("@/stores/favoritesStore").then(({ useFavoritesStore }) => {
+        void useFavoritesStore.getState().syncFromApi();
+      });
+      void import("@/stores/conversationsStore").then(({ useConversationsStore }) => {
+        void useConversationsStore.getState().syncFromApi();
+      });
+      return;
+    }
     void bootstrapSessionFromCookies().then((ok) => {
       if (!ok) {
         useAuthStore.getState().logout();
@@ -17,6 +25,9 @@ export function SessionBootstrap() {
       }
       void import("@/stores/favoritesStore").then(({ useFavoritesStore }) => {
         void useFavoritesStore.getState().syncFromApi();
+      });
+      void import("@/stores/conversationsStore").then(({ useConversationsStore }) => {
+        void useConversationsStore.getState().syncFromApi();
       });
     });
   }, []);

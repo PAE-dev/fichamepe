@@ -29,6 +29,7 @@ export type RegisterPayload = {
   password: string;
   /** Si no se envía, el backend asigna rol por defecto (freelancer). */
   role?: "client" | "freelancer";
+  referralCode?: string;
 };
 
 /** POST /auth/register — respuesta del backend (cookies de refresh las maneja axios). */
@@ -43,13 +44,32 @@ export async function registerAccount(
   if (payload.role !== undefined) {
     body.role = payload.role;
   }
+  const ref = payload.referralCode?.trim();
+  if (ref) {
+    body.referralCode = ref.toUpperCase();
+  }
   const { data } = await api.post<{ accessToken: string; user: AuthUser }>(
     "/auth/register",
     body,
   );
+  const u = data.user;
   return {
     accessToken: data.accessToken,
-    user: { ...data.user, avatarUrl: data.user.avatarUrl ?? null },
+    user: {
+      ...u,
+      avatarUrl: u.avatarUrl ?? null,
+      referralCode: u.referralCode ?? "",
+      hasReferredBy: u.hasReferredBy ?? false,
+      publicationCount: u.publicationCount ?? 0,
+      publicationActiveCount: u.publicationActiveCount ?? u.publicationCount ?? 0,
+      publicationActiveMax: u.publicationActiveMax ?? u.publicationMax ?? null,
+      publicationBaseActiveMax: u.publicationBaseActiveMax ?? null,
+      publicationMax: u.publicationMax ?? null,
+      isPublicationExempt: u.isPublicationExempt ?? false,
+      referralDirectCount: u.referralDirectCount ?? 0,
+      referralSlotsEarned: u.referralSlotsEarned ?? 0,
+      purchasedPublicationSlots: u.purchasedPublicationSlots ?? 0,
+    },
   };
 }
 
@@ -68,7 +88,21 @@ export async function postLogin(
 /** GET /auth/me (requiere Bearer ya configurado en el cliente). */
 export async function fetchAuthMe(): Promise<AuthUser> {
   const { data } = await api.get<AuthUser>("/auth/me");
-  return { ...data, avatarUrl: data.avatarUrl ?? null };
+  return {
+    ...data,
+    avatarUrl: data.avatarUrl ?? null,
+    referralCode: data.referralCode ?? "",
+    hasReferredBy: data.hasReferredBy ?? false,
+    publicationCount: data.publicationCount ?? 0,
+    publicationActiveCount: data.publicationActiveCount ?? data.publicationCount ?? 0,
+    publicationActiveMax: data.publicationActiveMax ?? data.publicationMax ?? null,
+    publicationBaseActiveMax: data.publicationBaseActiveMax ?? null,
+    publicationMax: data.publicationMax ?? null,
+    isPublicationExempt: data.isPublicationExempt ?? false,
+    referralDirectCount: data.referralDirectCount ?? 0,
+    referralSlotsEarned: data.referralSlotsEarned ?? 0,
+    purchasedPublicationSlots: data.purchasedPublicationSlots ?? 0,
+  };
 }
 
 export type ForgotPasswordResponse = {

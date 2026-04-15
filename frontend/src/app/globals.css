@@ -18,6 +18,15 @@
   --fp-surface: #ffffff;
   --fp-surface-elevated: #f8fafc;
   --fp-muted: #6b7280;
+  /* Bloque marketing / pricing oscuro (tokens únicos; componentes usan utilities). */
+  --fp-marketing-deep: #0f172a;
+  --fp-marketing-deep-mid: #1e293b;
+  --fp-marketing-on: #f8fafc;
+  --fp-marketing-on-muted: rgb(248 250 252 / 0.65);
+  --fp-marketing-on-subtle: rgb(248 250 252 / 0.45);
+  --fp-marketing-line: rgb(248 250 252 / 0.1);
+  --fp-marketing-glass: rgb(248 250 252 / 0.06);
+  --fp-marketing-glass-strong: rgb(248 250 252 / 0.1);
 }
 
 @theme inline {
@@ -34,6 +43,14 @@
   --color-surface-elevated: var(--fp-surface-elevated);
   --color-border: var(--fp-border);
   --color-muted: var(--fp-muted);
+  --color-marketing-deep: var(--fp-marketing-deep);
+  --color-marketing-deep-mid: var(--fp-marketing-deep-mid);
+  --color-marketing-on: var(--fp-marketing-on);
+  --color-marketing-on-muted: var(--fp-marketing-on-muted);
+  --color-marketing-on-subtle: var(--fp-marketing-on-subtle);
+  --color-marketing-line: var(--fp-marketing-line);
+  --color-marketing-glass: var(--fp-marketing-glass);
+  --color-marketing-glass-strong: var(--fp-marketing-glass-strong);
   --font-sans: var(--font-inter);
   --font-heading: var(--font-plus-jakarta);
   --font-mono: var(--font-jetbrains-mono);

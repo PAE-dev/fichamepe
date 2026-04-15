@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { ProfilesModule } from '../profiles/profiles.module';
+import { UsersModule } from '../users/users.module';
 import { CreateServiceUseCase } from './application/use-cases/create-service.use-case';
 import { DeleteServiceUseCase } from './application/use-cases/delete-service.use-case';
 import { GetFeedServicesUseCase } from './application/use-cases/get-feed-services.use-case';
@@ -22,11 +23,13 @@ import { ListMyServicesUseCase } from './application/use-cases/list-my-services.
 import { RemoveServiceFavoriteUseCase } from './application/use-cases/remove-service-favorite.use-case';
 import { SetServiceStatusUseCase } from './application/use-cases/set-service-status.use-case';
 import { GetMyServiceByIdUseCase } from './application/use-cases/get-my-service-by-id.use-case';
+import { PublicationSlotsAvailabilityService } from './application/services/publication-slots-availability.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ServiceOrmEntity, ServiceFavoriteOrmEntity]),
     ProfilesModule,
+    forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
   ],
   controllers: [ServicesController],
@@ -47,9 +50,11 @@ import { GetMyServiceByIdUseCase } from './application/use-cases/get-my-service-
     AddServiceFavoriteUseCase,
     RemoveServiceFavoriteUseCase,
     SetServiceStatusUseCase,
+    PublicationSlotsAvailabilityService,
   ],
   exports: [
     SERVICE_REPOSITORY,
+    PublicationSlotsAvailabilityService,
     TypeOrmModule.forFeature([ServiceOrmEntity]),
     GetFeedServicesUseCase,
     GetServicesByProfileUseCase,
