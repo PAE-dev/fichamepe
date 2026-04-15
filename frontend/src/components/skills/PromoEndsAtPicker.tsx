@@ -61,7 +61,7 @@ export function PromoEndsAtPicker({
         }
         const wall: CalendarDateTime =
           typeof next === "object" && next !== null && "timeZone" in next
-            ? toCalendarDateTime(next as ZonedDateTime)
+            ? toCalendarDateTime(next as unknown as ZonedDateTime)
             : (next as CalendarDateTime);
         onChange(dateTimeToLocalString(wall));
       }}

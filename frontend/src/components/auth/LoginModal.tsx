@@ -82,12 +82,14 @@ export function LoginModal({ state }: LoginModalProps) {
         <Modal.Container placement="center" size="lg" scroll="inside">
           <Modal.Dialog className="w-full !max-w-[min(calc(100vw-12px),560px)] !p-0 sm:!max-w-[560px] rounded-3xl border border-[#E5E7EB] bg-white shadow-2xl shadow-[#1A1A2E]/10 outline-none">
             <Modal.Header className="relative px-5 pb-1 pt-8 text-center sm:px-10 sm:pt-10">
-              <Modal.CloseTrigger
+              <button
+                type="button"
                 aria-label="Cerrar"
-                className="absolute right-3 top-3 inline-flex size-9 items-center justify-center rounded-full text-[#9CA3AF] transition-colors hover:bg-[#F3F4F6] hover:text-[#1A1A2E] sm:right-4 sm:top-4"
+                className="absolute right-3 top-3 inline-flex size-9 items-center justify-center rounded-full text-[#9CA3AF] transition-colors hover:bg-[#F3F4F6] hover:text-[#1A1A2E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6C63FF]/35 sm:right-4 sm:top-4"
+                onClick={() => state.close()}
               >
                 <X className="size-5" strokeWidth={2} aria-hidden />
-              </Modal.CloseTrigger>
+              </button>
               <Modal.Heading className="text-xl font-semibold tracking-tight text-[#1A1A2E] sm:text-2xl">
                 Inicia sesión en tu cuenta
               </Modal.Heading>

@@ -91,11 +91,12 @@ function UserAccountDropdown({ user }: { user: AuthUser }) {
 
   return (
     <Dropdown>
-      <Dropdown.Trigger
-        className={`${accountPillClassName()} !h-auto !min-h-0 !rounded-full !border-border !bg-white !py-1.5 !pl-1.5 !pr-3 !font-normal !shadow-none hover:!bg-primary/[0.06]`}
-        aria-label="Menú de cuenta"
-      >
-        <UserAccountPillContent user={user} />
+      <Dropdown.Trigger aria-label="Menú de cuenta">
+        <div
+          className={`${accountPillClassName()} cursor-pointer !h-auto !min-h-0 !rounded-full !border-border !bg-white !py-1.5 !pl-1.5 !pr-3 !font-normal !shadow-none hover:!bg-primary/[0.06]`}
+        >
+          <UserAccountPillContent user={user} />
+        </div>
       </Dropdown.Trigger>
       <Dropdown.Popover placement="bottom end" className="min-w-[220px]">
         <Dropdown.Menu aria-label="Cuenta">

@@ -286,11 +286,10 @@ export function ServiceCard({
           </p>
           {showActions ? (
             <Dropdown>
-              <Dropdown.Trigger
-                className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-white text-muted hover:bg-primary/5"
-                aria-label="Acciones de publicación"
-              >
-                <MoreVertical className="size-4" aria-hidden />
+              <Dropdown.Trigger aria-label="Acciones de publicación">
+                <div className="inline-flex size-8 items-center justify-center rounded-full border border-border bg-white text-muted transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+                  <MoreVertical className="size-4" aria-hidden />
+                </div>
               </Dropdown.Trigger>
               <Dropdown.Popover placement="bottom end">
                 <Dropdown.Menu aria-label="Acciones de habilidad">

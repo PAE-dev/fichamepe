@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { FP_REFRESH_COOKIE, FP_ROLE_COOKIE } from "@/lib/auth-cookies";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const refresh = request.cookies.get(FP_REFRESH_COOKIE)?.value;
   const role = request.cookies.get(FP_ROLE_COOKIE)?.value;
@@ -41,3 +41,4 @@ export const config = {
     "/skills/:path*",
   ],
 };
+

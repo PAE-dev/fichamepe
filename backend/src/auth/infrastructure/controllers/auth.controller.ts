@@ -27,6 +27,8 @@ import { JwtRefreshAuthGuard } from '../guards/jwt-refresh-auth.guard';
 import type { RequestUser } from '../../domain/services/auth-token.service.interface';
 import { extractRefreshTokenFromRequest } from '../utils/refresh-token.extractor';
 import { AuthCookieService } from '../services/auth-cookie.service';
+import { AuthAuditService } from '../services/auth-audit.service';
+import { getRequestIp, getRequestUserAgent } from '../../../common/utils/request-metadata';
 
 @Controller('auth')
 export class AuthController {
@@ -38,6 +40,7 @@ export class AuthController {
     private readonly requestPasswordReset: RequestPasswordResetUseCase,
     private readonly completePasswordReset: CompletePasswordResetUseCase,
     private readonly authCookies: AuthCookieService,
+    private readonly authAudit: AuthAuditService,
   ) {}
 
   @Post('register')
@@ -45,11 +48,17 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60 * 1000 } })
   async register(
     @Body() dto: RegisterDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     const { refreshToken, accessToken, user } =
       await this.registerUser.execute(dto);
     this.authCookies.setAuthCookies(res, refreshToken, user.role);
+    await this.authAudit.recordLoginEvent({
+      userId: user.id,
+      ip: getRequestIp(req),
+      userAgent: getRequestUserAgent(req),
+    });
     return { accessToken, user };
   }
 
@@ -73,10 +82,16 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60 * 1000 } })
   async login(
     @Body() dto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     const tokens = await this.loginUser.execute(dto);
     this.authCookies.setAuthCookies(res, tokens.refreshToken, tokens.role);
+    await this.authAudit.recordLoginEvent({
+      userId: tokens.userId,
+      ip: getRequestIp(req),
+      userAgent: getRequestUserAgent(req),
+    });
     return { accessToken: tokens.accessToken };
   }
 
@@ -94,6 +109,11 @@ export class AuthController {
     }
     const tokens = await this.refreshTokens.execute(user.userId, refreshToken);
     this.authCookies.setAuthCookies(res, tokens.refreshToken, user.role);
+    await this.authAudit.recordLoginEvent({
+      userId: user.userId,
+      ip: getRequestIp(req),
+      userAgent: getRequestUserAgent(req),
+    });
     return { accessToken: tokens.accessToken };
   }
 

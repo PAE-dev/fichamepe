@@ -47,16 +47,22 @@ export function AuthModalsProvider({ children }: { children: ReactNode }) {
   return (
     <AuthModalsContext.Provider value={value}>
       {children}
-      <ForgotPasswordModal state={forgotPasswordState} />
-      <Suspense fallback={null}>
-        <LoginModal state={loginState} />
-      </Suspense>
-      <RegisterModal
-        state={registerState}
-        initialRole={registerInitialRole}
-        onClosed={clearRegisterRole}
-        onSwitchToLogin={openLogin}
-      />
+      {forgotPasswordState.isOpen ? (
+        <ForgotPasswordModal state={forgotPasswordState} />
+      ) : null}
+      {loginState.isOpen ? (
+        <Suspense fallback={null}>
+          <LoginModal state={loginState} />
+        </Suspense>
+      ) : null}
+      {registerState.isOpen ? (
+        <RegisterModal
+          state={registerState}
+          initialRole={registerInitialRole}
+          onClosed={clearRegisterRole}
+          onSwitchToLogin={openLogin}
+        />
+      ) : null}
     </AuthModalsContext.Provider>
   );
 }

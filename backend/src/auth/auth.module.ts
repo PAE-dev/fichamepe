@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from '../users/users.module';
 import { ProfilesModule } from '../profiles/profiles.module';
 import { parseEnvDurationToSeconds } from './infrastructure/utils/parse-env-duration';
@@ -14,6 +15,8 @@ import { JwtRefreshAuthGuard } from './infrastructure/guards/jwt-refresh-auth.gu
 import { RolesGuard } from './infrastructure/guards/roles.guard';
 import { AuthController } from './infrastructure/controllers/auth.controller';
 import { AuthCookieService } from './infrastructure/services/auth-cookie.service';
+import { AuthAuditService } from './infrastructure/services/auth-audit.service';
+import { AuthLoginEventOrmEntity } from './infrastructure/persistence/entities/auth-login-event.orm';
 import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
 import { LoginUserUseCase } from './application/use-cases/login-user.use-case';
 import { RefreshTokensUseCase } from './application/use-cases/refresh-tokens.use-case';
@@ -26,6 +29,7 @@ import { AUTH_TOKEN_SERVICE } from './auth.di-tokens';
   imports: [
     forwardRef(() => UsersModule),
     forwardRef(() => ProfilesModule),
+    TypeOrmModule.forFeature([AuthLoginEventOrmEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -44,6 +48,7 @@ import { AUTH_TOKEN_SERVICE } from './auth.di-tokens';
   controllers: [AuthController],
   providers: [
     AuthCookieService,
+    AuthAuditService,
     { provide: AUTH_TOKEN_SERVICE, useClass: NestJwtAuthTokenService },
     RegisterUserUseCase,
     LoginUserUseCase,

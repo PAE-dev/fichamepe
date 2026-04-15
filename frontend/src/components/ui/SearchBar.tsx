@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Clock3, Flame, Search } from "lucide-react";
-import { Button } from "@heroui/react/button";
-import { SearchField } from "@heroui/react/search-field";
 import { buildExploreSearchUrl } from "@/lib/search-route";
 import { useSearchStore } from "@/stores/searchStore";
 
@@ -67,49 +65,54 @@ export function SearchBar({
 
   return (
     <div className={`relative ${className}`}>
-      <SearchField
-        value={query}
-        onChange={(next) => {
-          if (value !== undefined) onValueChange?.(next);
-          else setInternalQuery(next);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") submit(query);
-        }}
+      <form
         className="w-full"
+        role="search"
         aria-label="Buscar servicios"
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit(query);
+        }}
       >
-        <SearchField.Group className="min-h-11 rounded-full border border-border bg-white shadow-sm transition focus-within:border-primary focus-within:shadow-md">
-          <SearchField.SearchIcon className="pl-3 text-muted">
+        <div className="flex min-h-11 items-center rounded-full border border-border bg-white shadow-sm transition focus-within:border-primary focus-within:shadow-md">
+          <span className="flex shrink-0 pl-3 text-muted">
             <Search className="size-4" aria-hidden />
-          </SearchField.SearchIcon>
-          <SearchField.Input
+          </span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (value !== undefined) onValueChange?.(next);
+              else setInternalQuery(next);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submit(query);
+            }}
             placeholder={PLACEHOLDERS[placeholderIndex]}
-            className={`${compact ? "text-sm" : "text-base"} text-foreground placeholder:text-muted`}
+            autoComplete="off"
+            className={`min-h-11 w-0 min-w-0 flex-1 border-0 bg-transparent py-3 pl-2 pr-2 ${
+              compact ? "text-sm" : "text-base"
+            } text-foreground outline-none placeholder:text-muted`}
           />
           {showSubmitButton ? (
-            <Button
-              type="button"
-              size={compact ? "sm" : "md"}
-              className="mr-1.5 rounded-full bg-primary px-4 font-semibold text-white"
-              onPress={() => submit(query)}
+            <button
+              type="submit"
+              className="mr-1.5 inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-white transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               Buscar
-            </Button>
+            </button>
           ) : (
-            <Button
-              isIconOnly
-              type="button"
-              size="sm"
-              className="mr-1.5 rounded-full bg-primary text-white"
-              onPress={() => submit(query)}
+            <button
+              type="submit"
               aria-label="Buscar"
+              className="mr-1.5 inline-flex size-9 items-center justify-center rounded-full bg-primary text-white transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               <Search className="size-4" aria-hidden />
-            </Button>
+            </button>
           )}
-        </SearchField.Group>
-      </SearchField>
+        </div>
+      </form>
 
       {showPanel ? (
         <div className="mt-2 rounded-2xl border border-border bg-white p-3 shadow-sm">

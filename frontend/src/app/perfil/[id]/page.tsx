@@ -15,13 +15,8 @@ export default async function PerfilPage({
 }) {
   const { id } = await params;
 
-  const profilePromise = fetchPublicProfileById(id);
-  const servicesPromise = fetchServicesByProfileId(id).catch(() => []);
-
-  const [profile, services] = await Promise.all([profilePromise, servicesPromise]).catch(() => [
-    null,
-    [],
-  ]);
+  const profile = await fetchPublicProfileById(id).catch(() => null);
+  const services = await fetchServicesByProfileId(id).catch(() => []);
 
   if (!profile) {
     notFound();

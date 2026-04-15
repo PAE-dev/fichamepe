@@ -10,7 +10,7 @@ import type {
 import { AUTH_TOKEN_SERVICE } from '../../auth.di-tokens';
 import type { LoginDto } from '../dto/login.dto';
 
-export type LoginResult = AuthTokens & { role: UserRole };
+export type LoginResult = AuthTokens & { role: UserRole; userId: string };
 
 @Injectable()
 export class LoginUserUseCase {
@@ -38,6 +38,6 @@ export class LoginUserUseCase {
       email: user.email,
       role: user.role,
     });
-    return { ...tokens, role: user.role };
+    return { ...tokens, role: user.role, userId: user.id };
   }
 }

@@ -131,7 +131,7 @@ export function SkillWizardPageShell({ mode, skillId, initialService }: SkillWiz
       currency: "PEN",
       coverImageUrl: data.coverImageUrl ?? initialService?.coverImageUrl ?? null,
       status: nextStatus,
-      isActive: nextStatus === "ACTIVA",
+      isActive: false,
       viewCount: initialService?.viewCount ?? 0,
       tags: data.tags,
       category: data.category || "other",
