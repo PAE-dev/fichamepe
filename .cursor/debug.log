@@ -416,3 +416,4 @@
 {"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/"},"timestamp":1776313433283}
 {"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/"},"timestamp":1776313597288}
 {"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/"},"timestamp":1776313871572}
+{"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/"},"timestamp":1776314189550}
