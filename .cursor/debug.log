@@ -415,3 +415,4 @@
 {"sessionId":"943a62","runId":"run-1","hypothesisId":"H4","location":"src/components/mobile/BottomSheet.tsx:BottomSheet.useEffect","message":"bottomsheet-mounted","data":{"triggerLabel":"Filtros","isOpen":false,"path":"/explorar"},"timestamp":1776313430153}
 {"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/"},"timestamp":1776313433283}
 {"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/"},"timestamp":1776313597288}
+{"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/"},"timestamp":1776313871572}
