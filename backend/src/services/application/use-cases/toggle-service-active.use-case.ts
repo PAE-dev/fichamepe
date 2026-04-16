@@ -12,12 +12,17 @@ import {
   type ServiceResponse,
 } from '../mappers/service-response.mapper';
 import { PublicationSlotsAvailabilityService } from '../services/publication-slots-availability.service';
+import type { IUserRepository } from '../../../users/domain/repositories';
+import { USER_REPOSITORY } from '../../../users/users.di-tokens';
+import { assertUserEmailVerified } from '../../../common/email-verification/assert-user-email-verified';
 
 @Injectable()
 export class ToggleServiceActiveUseCase {
   constructor(
     @Inject(SERVICE_REPOSITORY)
     private readonly services: IServiceRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly users: IUserRepository,
     private readonly publicationSlots: PublicationSlotsAvailabilityService,
   ) {}
 
@@ -35,6 +40,10 @@ export class ToggleServiceActiveUseCase {
       );
     }
     if (existing.status === 'PAUSADA') {
+      const owner = await this.users.findById(userId);
+      if (owner) {
+        assertUserEmailVerified(owner);
+      }
       await this.publicationSlots.assertMayActivateOneMore(
         userId,
         existing.profileId,

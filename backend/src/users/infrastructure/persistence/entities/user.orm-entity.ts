@@ -61,6 +61,18 @@ export class UserOrmEntity {
   @Column({ type: 'timestamp', nullable: true })
   passwordResetExpires: Date | null;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  emailVerifiedAt: Date | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  emailVerificationToken: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  emailVerificationExpires: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  emailVerificationLastSentAt: Date | null;
+
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 

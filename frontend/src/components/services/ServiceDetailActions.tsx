@@ -43,6 +43,7 @@ export function ServiceDetailActions({ service }: ServiceDetailActionsProps) {
   const router = useRouter();
   const { openLogin } = useAuthModals();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const openOrCreateConversationFromService = useConversationsStore(
     (state) => state.openOrCreateConversationFromService,
   );
@@ -63,6 +64,12 @@ export function ServiceDetailActions({ service }: ServiceDetailActionsProps) {
   const handleContact = async () => {
     if (!isAuthenticated) {
       openLogin();
+      return;
+    }
+    if (user?.emailVerified === false) {
+      window.alert(
+        "Verifica tu correo para poder escribir al freelancer. Puedes reenviar el correo desde la barra amarilla arriba de la página.",
+      );
       return;
     }
     try {

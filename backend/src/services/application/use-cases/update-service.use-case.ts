@@ -5,6 +5,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { IUserRepository } from '../../../users/domain/repositories';
+import { USER_REPOSITORY } from '../../../users/users.di-tokens';
+import { assertUserEmailVerified } from '../../../common/email-verification/assert-user-email-verified';
 import type { IServiceRepository } from '../../domain/repositories/i-service.repository';
 import { SERVICE_REPOSITORY } from '../../services.di-tokens';
 import type { Service } from '../../domain/entities/service.domain';
@@ -20,6 +23,8 @@ export class UpdateServiceUseCase {
   constructor(
     @Inject(SERVICE_REPOSITORY)
     private readonly services: IServiceRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly users: IUserRepository,
   ) {}
 
   async execute(
@@ -119,6 +124,12 @@ export class UpdateServiceUseCase {
     if (dto.listPrice !== undefined || dto.promoEndsAt !== undefined) {
       patch.listPrice = nextList;
       patch.promoEndsAt = nextPromo;
+    }
+    if (patch.status === 'EN_REVISION') {
+      const owner = await this.users.findById(userId);
+      if (owner) {
+        assertUserEmailVerified(owner);
+      }
     }
     const updated = await this.services.update(id, patch);
     if (!updated) {

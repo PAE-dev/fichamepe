@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from '../users/users.module';
 import { ProfilesModule } from '../profiles/profiles.module';
 import { ServicesModule } from '../services/services.module';
+import { MailModule } from '../mail/mail.module';
 import { parseEnvDurationToSeconds } from './infrastructure/utils/parse-env-duration';
 import { requireEnvSecret } from './infrastructure/utils/require-env-secret';
 import { NestJwtAuthTokenService } from './infrastructure/jwt/nest-jwt-auth-token.service';
@@ -24,10 +25,13 @@ import { RefreshTokensUseCase } from './application/use-cases/refresh-tokens.use
 import { CompletePasswordResetUseCase } from './application/use-cases/complete-password-reset.use-case';
 import { GetAuthenticatedUserUseCase } from './application/use-cases/get-authenticated-user.use-case';
 import { RequestPasswordResetUseCase } from './application/use-cases/request-password-reset.use-case';
+import { VerifyEmailUseCase } from './application/use-cases/verify-email.use-case';
+import { ResendVerificationEmailUseCase } from './application/use-cases/resend-verification-email.use-case';
 import { AUTH_TOKEN_SERVICE } from './auth.di-tokens';
 
 @Module({
   imports: [
+    MailModule,
     forwardRef(() => UsersModule),
     forwardRef(() => ProfilesModule),
     forwardRef(() => ServicesModule),
@@ -58,6 +62,8 @@ import { AUTH_TOKEN_SERVICE } from './auth.di-tokens';
     GetAuthenticatedUserUseCase,
     RequestPasswordResetUseCase,
     CompletePasswordResetUseCase,
+    VerifyEmailUseCase,
+    ResendVerificationEmailUseCase,
     JwtStrategy,
     JwtRefreshStrategy,
     JwtAuthGuard,

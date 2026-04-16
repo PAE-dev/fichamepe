@@ -41,6 +41,18 @@ export interface IUserRepository {
   /** Actualiza contraseña y borra token si el token es válido y no ha expirado. */
   consumePasswordReset(token: string, newPasswordHash: string): Promise<boolean>;
 
+  setEmailVerificationByUserId(
+    userId: string,
+    token: string,
+    expires: Date,
+    lastSentAt: Date,
+  ): Promise<void>;
+
+  /** Marca correo verificado y limpia tokens si el token es válido y no ha expirado. */
+  consumeEmailVerification(token: string): Promise<boolean>;
+
+  getEmailVerificationLastSentAt(userId: string): Promise<Date | null>;
+
   /** Suma 1 al contador de cupos por referido del referidor, sin superar `cap`. */
   incrementReferralSlotsEarnedCapped(
     referrerUserId: string,

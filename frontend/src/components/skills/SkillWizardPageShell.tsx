@@ -36,6 +36,7 @@ import {
   validatePromoFields,
   validateStep,
 } from "./skill-wizard.validation";
+import { useAuthStore } from "@/store/auth.store";
 
 type SkillWizardPageShellProps = {
   mode: "create" | "edit";
@@ -80,6 +81,7 @@ function extractApiErrorMessage(error: unknown): string {
 
 export function SkillWizardPageShell({ mode, skillId, initialService }: SkillWizardPageShellProps) {
   const router = useRouter();
+  const authUser = useAuthStore((s) => s.user);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [coverImageUploading, setCoverImageUploading] = useState(false);
@@ -300,6 +302,12 @@ export function SkillWizardPageShell({ mode, skillId, initialService }: SkillWiz
     };
     try {
       const shouldSendToReview = !data.publishAsDraft;
+      if (shouldSendToReview && authUser?.emailVerified === false) {
+        setSubmitError(
+          "Verifica tu correo para enviar a revisión. Revisa el correo que te enviamos o pulsa «Reenviar correo» en la barra superior.",
+        );
+        return;
+      }
       if (mode === "edit" && skillId) {
         await updateSkillService(skillId, {
           ...payload,

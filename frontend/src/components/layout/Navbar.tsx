@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
+  BadgeCheck,
   Bell,
   ClipboardList,
+  CircleAlert,
   FileStack,
   Heart,
   LayoutGrid,
@@ -127,9 +129,45 @@ function UserAccountDropdown({ user }: { user: AuthUser }) {
           <Dropdown.Item key="/cuenta/perfil" href="/cuenta/perfil" className="cursor-pointer">
             <span className="flex items-center gap-2.5">
               <UserPen className="size-4 shrink-0 text-muted" aria-hidden />
-              <span>Editar perfil</span>
+              <span className="flex min-w-0 flex-col gap-0.5 text-left">
+                <span>Editar perfil</span>
+                {user.emailVerified === false ? (
+                  <span className="text-xs font-medium text-primary">Correo pendiente de verificación</span>
+                ) : (
+                  <span className="text-xs text-muted">Correo verificado</span>
+                )}
+              </span>
             </span>
           </Dropdown.Item>
+          {user.emailVerified === false ? (
+            <Dropdown.Item
+              key="/cuenta/perfil#verificacion-correo"
+              href="/cuenta/perfil#verificacion-correo"
+              className="cursor-pointer"
+            >
+              <span className="flex items-center gap-2.5">
+                <CircleAlert className="size-4 shrink-0 text-primary" aria-hidden />
+                <span className="flex min-w-0 flex-col gap-0.5 text-left">
+                  <span>Verificar correo</span>
+                  <span className="text-xs text-muted">Reenviar enlace o ver estado</span>
+                </span>
+              </span>
+            </Dropdown.Item>
+          ) : (
+            <Dropdown.Item
+              key="/cuenta/perfil#verificacion-correo"
+              href="/cuenta/perfil#verificacion-correo"
+              className="cursor-pointer"
+            >
+              <span className="flex items-center gap-2.5">
+                <BadgeCheck className="size-4 shrink-0 text-success" aria-hidden />
+                <span className="flex min-w-0 flex-col gap-0.5 text-left">
+                  <span>Correo verificado</span>
+                  <span className="text-xs text-muted">Ver detalles en tu perfil</span>
+                </span>
+              </span>
+            </Dropdown.Item>
+          )}
           {ACCOUNT_MENU_LINKS.map((item) => {
             const Icon = item.Icon;
             return (
@@ -182,10 +220,36 @@ function UserAccountMobileBlock({
         <UserAccountPillContent user={user} />
       </Link>
       <div className="mt-1 flex flex-col gap-0.5">
-        <Link href="/cuenta/perfil" onClick={onNavigate} className={`${linkClass} inline-flex items-center gap-2.5`}>
-          <UserPen className="size-4 shrink-0 text-muted" aria-hidden />
-          Editar perfil
+        <Link href="/cuenta/perfil" onClick={onNavigate} className={`${linkClass} flex flex-col gap-0.5`}>
+          <span className="inline-flex items-center gap-2.5">
+            <UserPen className="size-4 shrink-0 text-muted" aria-hidden />
+            Editar perfil
+          </span>
+          {user.emailVerified === false ? (
+            <span className="pl-7 text-xs font-medium text-primary">Correo pendiente de verificación</span>
+          ) : (
+            <span className="pl-7 text-xs text-muted">Correo verificado</span>
+          )}
         </Link>
+        {user.emailVerified === false ? (
+          <Link
+            href="/cuenta/perfil#verificacion-correo"
+            onClick={onNavigate}
+            className={`${linkClass} inline-flex items-center gap-2.5`}
+          >
+            <CircleAlert className="size-4 shrink-0 text-primary" aria-hidden />
+            Verificar correo
+          </Link>
+        ) : (
+          <Link
+            href="/cuenta/perfil#verificacion-correo"
+            onClick={onNavigate}
+            className={`${linkClass} inline-flex items-center gap-2.5`}
+          >
+            <BadgeCheck className="size-4 shrink-0 text-success" aria-hidden />
+            Estado del correo
+          </Link>
+        )}
         {ACCOUNT_MENU_LINKS.map((item) => {
           const Icon = item.Icon;
           return (

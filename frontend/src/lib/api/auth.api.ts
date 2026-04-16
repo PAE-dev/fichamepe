@@ -1,5 +1,8 @@
 import { api } from "@/lib/api";
+import { normalizeAuthUser } from "@/lib/normalize-auth-user";
 import type { AuthUser } from "@/types/auth";
+
+export { normalizeAuthUser } from "@/lib/normalize-auth-user";
 
 export function parseApiErrorMessage(e: unknown, fallback: string): string {
   if (typeof e !== "object" || e === null || !("response" in e)) {
@@ -55,7 +58,7 @@ export async function registerAccount(
   const u = data.user;
   return {
     accessToken: data.accessToken,
-    user: {
+    user: normalizeAuthUser({
       ...u,
       avatarUrl: u.avatarUrl ?? null,
       referralCode: u.referralCode ?? "",
@@ -69,7 +72,7 @@ export async function registerAccount(
       referralDirectCount: u.referralDirectCount ?? 0,
       referralSlotsEarned: u.referralSlotsEarned ?? 0,
       purchasedPublicationSlots: u.purchasedPublicationSlots ?? 0,
-    },
+    } as AuthUser),
   };
 }
 
@@ -88,7 +91,7 @@ export async function postLogin(
 /** GET /auth/me (requiere Bearer ya configurado en el cliente). */
 export async function fetchAuthMe(): Promise<AuthUser> {
   const { data } = await api.get<AuthUser>("/auth/me");
-  return {
+  return normalizeAuthUser({
     ...data,
     avatarUrl: data.avatarUrl ?? null,
     referralCode: data.referralCode ?? "",
@@ -102,7 +105,19 @@ export async function fetchAuthMe(): Promise<AuthUser> {
     referralDirectCount: data.referralDirectCount ?? 0,
     referralSlotsEarned: data.referralSlotsEarned ?? 0,
     purchasedPublicationSlots: data.purchasedPublicationSlots ?? 0,
-  };
+  } as AuthUser);
+}
+
+export async function postVerifyEmail(token: string): Promise<{ message: string }> {
+  const { data } = await api.post<{ message: string }>("/auth/verify-email", {
+    token: token.trim(),
+  });
+  return data;
+}
+
+export async function postResendVerificationEmail(): Promise<{ message: string }> {
+  const { data } = await api.post<{ message: string }>("/auth/resend-verification", {});
+  return data;
 }
 
 export type ForgotPasswordResponse = {

@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import type { AuthUser } from "@/types/auth";
+import { normalizeAuthUser } from "@/lib/normalize-auth-user";
 
 type AuthState = {
   user: AuthUser | null;
@@ -23,7 +24,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: (accessToken, user) => {
     set({
       accessToken,
-      user: {
+      user: normalizeAuthUser({
         ...user,
         avatarUrl: user.avatarUrl ?? null,
         referralCode: user.referralCode ?? "",
@@ -37,7 +38,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         referralDirectCount: user.referralDirectCount ?? 0,
         referralSlotsEarned: user.referralSlotsEarned ?? 0,
         purchasedPublicationSlots: user.purchasedPublicationSlots ?? 0,
-      },
+      } as AuthUser),
       isAuthenticated: true,
     });
     void import("@/stores/conversationsStore").then(({ useConversationsStore }) => {
@@ -67,7 +68,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   setUser: (user) =>
     set({
-      user: {
+      user: normalizeAuthUser({
         ...user,
         avatarUrl: user.avatarUrl ?? null,
         referralCode: user.referralCode ?? "",
@@ -81,7 +82,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         referralDirectCount: user.referralDirectCount ?? 0,
         referralSlotsEarned: user.referralSlotsEarned ?? 0,
         purchasedPublicationSlots: user.purchasedPublicationSlots ?? 0,
-      },
+      } as AuthUser),
     }),
   setLoading: (isLoading) => set({ isLoading }),
 }));

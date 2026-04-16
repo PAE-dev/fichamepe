@@ -22,6 +22,8 @@ export class User {
   referralSlotsEarned: number;
   /** Slots permanentes comprados (suma de órdenes cumplidas). */
   purchasedPublicationSlots: number;
+  /** null = correo aún no verificado (o cuenta antigua sin columna poblada). */
+  emailVerifiedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

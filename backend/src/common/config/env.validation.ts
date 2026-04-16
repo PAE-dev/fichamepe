@@ -90,6 +90,21 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   REFERRAL_PUBLISH_EXEMPT_EMAILS?: string;
+
+  /** URL del frontend (enlaces en correos de verificación). */
+  @IsOptional()
+  @IsString()
+  FRONTEND_URL?: string;
+
+  /** API key de Resend; si falta, el backend solo registra el enlace en logs. */
+  @IsOptional()
+  @IsString()
+  RESEND_API_KEY?: string;
+
+  /** Remitente verificado en Resend (ej. `Equipo <noreply@tudominio.com>`). */
+  @IsOptional()
+  @IsString()
+  MAIL_FROM?: string;
 }
 
 function formatValidationErrors(

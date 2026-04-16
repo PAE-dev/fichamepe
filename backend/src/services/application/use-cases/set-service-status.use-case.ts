@@ -13,12 +13,17 @@ import {
   type ServiceResponse,
 } from '../mappers/service-response.mapper';
 import { PublicationSlotsAvailabilityService } from '../services/publication-slots-availability.service';
+import type { IUserRepository } from '../../../users/domain/repositories';
+import { USER_REPOSITORY } from '../../../users/users.di-tokens';
+import { assertUserEmailVerified } from '../../../common/email-verification/assert-user-email-verified';
 
 @Injectable()
 export class SetServiceStatusUseCase {
   constructor(
     @Inject(SERVICE_REPOSITORY)
     private readonly services: IServiceRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly users: IUserRepository,
     private readonly publicationSlots: PublicationSlotsAvailabilityService,
   ) {}
 
@@ -33,6 +38,12 @@ export class SetServiceStatusUseCase {
     }
     if (existing.userId !== userId) {
       throw new ForbiddenException('No puedes modificar este servicio');
+    }
+    if (status === 'EN_REVISION' || status === 'ACTIVA') {
+      const owner = await this.users.findById(userId);
+      if (owner) {
+        assertUserEmailVerified(owner);
+      }
     }
     const patch: {
       status: ServiceStatus;

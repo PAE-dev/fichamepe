@@ -4,6 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 import type { AuthUser } from "@/types/auth";
+import { normalizeAuthUser } from "@/lib/normalize-auth-user";
 import { useAuthStore } from "@/store/auth.store";
 
 declare module "axios" {
@@ -122,7 +123,7 @@ export async function bootstrapSessionFromCookies(): Promise<boolean> {
     useAuthStore.getState().setAccessToken(data.accessToken);
     const { data: user } = await api.get<AuthUser>("/auth/me");
     useAuthStore.setState({
-      user: {
+      user: normalizeAuthUser({
         ...user,
         avatarUrl: user.avatarUrl ?? null,
         referralCode: user.referralCode ?? "",
@@ -136,7 +137,7 @@ export async function bootstrapSessionFromCookies(): Promise<boolean> {
         referralDirectCount: user.referralDirectCount ?? 0,
         referralSlotsEarned: user.referralSlotsEarned ?? 0,
         purchasedPublicationSlots: user.purchasedPublicationSlots ?? 0,
-      },
+      } as AuthUser),
       isAuthenticated: true,
     });
     return true;

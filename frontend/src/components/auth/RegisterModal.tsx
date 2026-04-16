@@ -101,6 +101,11 @@ export function RegisterModal({
       void import("@/stores/favoritesStore").then(({ useFavoritesStore }) => {
         void useFavoritesStore.getState().syncFromApi();
       });
+      if (res.user.emailVerified === false) {
+        window.alert(
+          "Te enviamos un correo con un enlace para verificar tu cuenta. Cuando lo confirmes podrás publicar y conversar.",
+        );
+      }
       reset();
       state.close();
       router.replace("/");

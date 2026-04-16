@@ -30,6 +30,11 @@ export type AuthUser = {
   referralSlotsEarned: number;
   /** Slots comprados de por vida (suma cumplida). */
   purchasedPublicationSlots: number;
+  /**
+   * false hasta verificar el correo (publicar o chatear).
+   * Si el backend no envía el campo (cliente antiguo), se asume true al normalizar.
+   */
+  emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
 };

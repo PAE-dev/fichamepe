@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -12,6 +13,9 @@ import { UserOrmEntity } from '../users/infrastructure/persistence/entities/user
 import { ChatGateway } from './chat.gateway';
 import { ConversationMessageOrmEntity } from './infrastructure/persistence/entities/conversation-message.orm-entity';
 import { ConversationOrmEntity } from './infrastructure/persistence/entities/conversation.orm-entity';
+import type { IUserRepository } from '../users/domain/repositories';
+import { USER_REPOSITORY } from '../users/users.di-tokens';
+import { assertUserEmailVerified } from '../common/email-verification/assert-user-email-verified';
 
 export type ConversationMessageApi = {
   id: string;
@@ -54,6 +58,8 @@ export class ConversationsService {
     private readonly profileRepo: Repository<ProfileOrmEntity>,
     @InjectRepository(UserOrmEntity)
     private readonly userRepo: Repository<UserOrmEntity>,
+    @Inject(USER_REPOSITORY)
+    private readonly users: IUserRepository,
     private readonly chatGateway: ChatGateway,
   ) {}
 
@@ -70,6 +76,11 @@ export class ConversationsService {
     buyerUserId: string,
     serviceId: string,
   ): Promise<ConversationThreadApi> {
+    const buyer = await this.users.findById(buyerUserId);
+    if (!buyer) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    assertUserEmailVerified(buyer);
     const service = await this.serviceRepo.findOne({
       where: { id: serviceId },
       relations: ['owner'],
@@ -123,6 +134,11 @@ export class ConversationsService {
     conversationId: string,
     text: string,
   ): Promise<ConversationMessageApi> {
+    const sender = await this.users.findById(userId);
+    if (!sender) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    assertUserEmailVerified(sender);
     await this.assertParticipant(userId, conversationId);
     const cleaned = text.trim();
     if (!cleaned) {

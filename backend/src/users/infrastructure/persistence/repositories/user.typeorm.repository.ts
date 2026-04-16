@@ -30,6 +30,7 @@ function toDomain(row: UserOrmEntity): User {
   u.referralMigrationCredits = row.referralMigrationCredits ?? 0;
   u.referralSlotsEarned = row.referralSlotsEarned ?? 0;
   u.purchasedPublicationSlots = row.purchasedPublicationSlots ?? 0;
+  u.emailVerifiedAt = row.emailVerifiedAt ?? null;
   u.createdAt = row.createdAt;
   u.updatedAt = row.updatedAt;
   return u;
@@ -113,7 +114,14 @@ export class UserTypeOrmRepository implements IUserRepository {
       return null;
     }
     if (patch.email !== undefined) {
-      row.email = patch.email.trim().toLowerCase();
+      const nextEmail = patch.email.trim().toLowerCase();
+      if (row.email !== nextEmail) {
+        row.email = nextEmail;
+        row.emailVerifiedAt = null;
+        row.emailVerificationToken = null;
+        row.emailVerificationExpires = null;
+        row.emailVerificationLastSentAt = null;
+      }
     }
     if (patch.fullName !== undefined) {
       const raw = patch.fullName;
@@ -171,6 +179,49 @@ export class UserTypeOrmRepository implements IUserRepository {
     row.passwordResetExpires = null;
     await this.repo.save(row);
     return true;
+  }
+
+  async setEmailVerificationByUserId(
+    userId: string,
+    token: string,
+    expires: Date,
+    lastSentAt: Date,
+  ): Promise<void> {
+    await this.repo.update(
+      { id: userId },
+      {
+        emailVerificationToken: token,
+        emailVerificationExpires: expires,
+        emailVerificationLastSentAt: lastSentAt,
+      },
+    );
+  }
+
+  async consumeEmailVerification(token: string): Promise<boolean> {
+    const row = await this.repo.findOne({
+      where: { emailVerificationToken: token },
+    });
+    if (
+      !row ||
+      !row.emailVerificationExpires ||
+      row.emailVerificationExpires.getTime() <= Date.now()
+    ) {
+      return false;
+    }
+    row.emailVerifiedAt = new Date();
+    row.emailVerificationToken = null;
+    row.emailVerificationExpires = null;
+    row.emailVerificationLastSentAt = null;
+    await this.repo.save(row);
+    return true;
+  }
+
+  async getEmailVerificationLastSentAt(userId: string): Promise<Date | null> {
+    const row = await this.repo.findOne({
+      where: { id: userId },
+      select: ['emailVerificationLastSentAt'],
+    });
+    return row?.emailVerificationLastSentAt ?? null;
   }
 
   async incrementReferralSlotsEarnedCapped(

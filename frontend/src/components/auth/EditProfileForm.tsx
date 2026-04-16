@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { BadgeCheck, CircleAlert } from "lucide-react";
 import { Button } from "@heroui/react/button";
 import { Input } from "@heroui/react/input";
 import { Label } from "@heroui/react/label";
@@ -16,6 +17,7 @@ import {
   presignAvatarUpload,
   putFileToPresignedUrl,
 } from "@/lib/api/user-profile.api";
+import { useResendVerificationEmail } from "@/hooks/use-resend-verification-email";
 import { useAuthStore } from "@/store/auth.store";
 import type { AuthUser } from "@/types/auth";
 
@@ -42,6 +44,8 @@ export function EditProfileForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
+  const { pending: resendPending, feedback: resendFeedback, resend, clearFeedback: clearResendFeedback } =
+    useResendVerificationEmail();
 
   const resetFromUser = useCallback((u: AuthUser) => {
     setFullName(u.fullName ?? "");
@@ -216,6 +220,43 @@ export function EditProfileForm() {
             className="h-12 w-full rounded-full border border-border bg-white px-5 text-[15px] shadow-none"
             placeholder="correo@ejemplo.com"
           />
+        </div>
+
+        <div
+          id="verificacion-correo"
+          className="scroll-mt-24 rounded-2xl border border-border bg-surface-elevated/80 p-4 sm:p-5"
+        >
+          <h2 className="text-sm font-semibold text-foreground">Verificación del correo</h2>
+          {user.emailVerified === false ? (
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="flex items-start gap-2 text-sm text-muted">
+                <CircleAlert className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                <span>
+                  Tu correo aún no está verificado. Revisa tu bandeja (y spam) o reenvía el enlace de confirmación.
+                </span>
+              </p>
+              <Button
+                type="button"
+                variant="primary"
+                className="shrink-0 rounded-full bg-gradient-to-r from-primary to-primary-light font-semibold text-white"
+                isPending={resendPending}
+                onPress={() => {
+                  clearResendFeedback();
+                  void resend();
+                }}
+              >
+                Reenviar correo de verificación
+              </Button>
+            </div>
+          ) : (
+            <p className="mt-3 flex items-start gap-2 text-sm text-muted">
+              <BadgeCheck className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
+              <span>Tu correo está verificado. Puedes publicar y usar conversaciones sin restricciones.</span>
+            </p>
+          )}
+          {user.emailVerified === false && resendFeedback ? (
+            <p className="mt-2 text-sm text-muted">{resendFeedback}</p>
+          ) : null}
         </div>
 
         {error ? <p className="text-center text-sm text-accent-red">{error}</p> : null}

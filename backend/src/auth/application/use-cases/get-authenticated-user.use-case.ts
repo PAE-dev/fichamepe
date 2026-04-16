@@ -64,10 +64,12 @@ export class GetAuthenticatedUserUseCase {
       password: _p,
       referredByUserId,
       referralMigrationCredits: _credits,
+      emailVerifiedAt,
       ...safePublic
     } = user;
     return {
       ...safePublic,
+      emailVerified: !!emailVerifiedAt,
       avatarUrl: profile?.avatarUrl ?? null,
       hasReferredBy: referredByUserId != null,
       publicationCount,

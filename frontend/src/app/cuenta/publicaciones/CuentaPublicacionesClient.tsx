@@ -286,6 +286,12 @@ export function CuentaPublicacionesClient() {
                 showActiveStatus
                 onEdit={(s) => router.push(`/skills/${s.id}/edit`)}
                 onPublish={async (s) => {
+                  if (user?.emailVerified === false) {
+                    window.alert(
+                      "Verifica tu correo para publicar. Revisa la bandeja de entrada o usa «Reenviar correo» en la parte superior de la página.",
+                    );
+                    return;
+                  }
                   await publishSkill(s.id);
                   await reload();
                 }}
@@ -294,6 +300,12 @@ export function CuentaPublicacionesClient() {
                   await reload();
                 }}
                 onReactivate={async (s) => {
+                  if (user?.emailVerified === false) {
+                    window.alert(
+                      "Verifica tu correo para reactivar la publicación. Revisa el correo que te enviamos o usa «Reenviar correo» arriba.",
+                    );
+                    return;
+                  }
                   await reactivateSkill(s.id);
                   await reload();
                 }}

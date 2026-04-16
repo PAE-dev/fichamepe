@@ -2,7 +2,7 @@ import type { SafeUser } from '../../../users/domain/entities';
 
 type SafeUserPublic = Omit<
   SafeUser,
-  'referredByUserId' | 'referralMigrationCredits'
+  'referredByUserId' | 'referralMigrationCredits' | 'emailVerifiedAt'
 >;
 
 /** Payload de GET /auth/me y respuesta de registro (sin contraseña). */
@@ -28,4 +28,6 @@ export type AuthenticatedUserResponse = SafeUserPublic & {
   isPublicationExempt: boolean;
   /** Personas que se registraron con tu código (estadística). */
   referralDirectCount: number;
+  /** false hasta completar verificación por correo (publicar / chatear). */
+  emailVerified: boolean;
 };

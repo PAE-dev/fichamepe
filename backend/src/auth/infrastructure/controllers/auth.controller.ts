@@ -15,9 +15,12 @@ import { RegisterDto } from '../../application/dto/register.dto';
 import { RefreshTokenDto } from '../../application/dto/refresh-token.dto';
 import { ForgotPasswordDto } from '../../application/dto/forgot-password.dto';
 import { ResetPasswordDto } from '../../application/dto/reset-password.dto';
+import { VerifyEmailBodyDto } from '../../application/dto/verify-email.dto';
 import { CompletePasswordResetUseCase } from '../../application/use-cases/complete-password-reset.use-case';
 import { GetAuthenticatedUserUseCase } from '../../application/use-cases/get-authenticated-user.use-case';
+import { ResendVerificationEmailUseCase } from '../../application/use-cases/resend-verification-email.use-case';
 import { RequestPasswordResetUseCase } from '../../application/use-cases/request-password-reset.use-case';
+import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
 import { LoginUserUseCase } from '../../application/use-cases/login-user.use-case';
 import { RefreshTokensUseCase } from '../../application/use-cases/refresh-tokens.use-case';
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
@@ -39,6 +42,8 @@ export class AuthController {
     private readonly getAuthenticatedUser: GetAuthenticatedUserUseCase,
     private readonly requestPasswordReset: RequestPasswordResetUseCase,
     private readonly completePasswordReset: CompletePasswordResetUseCase,
+    private readonly verifyEmail: VerifyEmailUseCase,
+    private readonly resendVerificationEmail: ResendVerificationEmailUseCase,
     private readonly authCookies: AuthCookieService,
     private readonly authAudit: AuthAuditService,
   ) {}
@@ -60,6 +65,20 @@ export class AuthController {
       userAgent: getRequestUserAgent(req),
     });
     return { accessToken, user };
+  }
+
+  @Post('verify-email')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 15, ttl: 60 * 1000 } })
+  verifyEmailPost(@Body() dto: VerifyEmailBodyDto) {
+    return this.verifyEmail.execute(dto.token);
+  }
+
+  @Post('resend-verification')
+  @UseGuards(JwtAuthGuard, ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60 * 1000 } })
+  resendVerification(@CurrentUser() user: RequestUser) {
+    return this.resendVerificationEmail.execute(user.userId);
   }
 
   @Post('forgot-password')
