@@ -21,9 +21,11 @@ export class AuthCookieService {
   }
 
   /**
-   * - Por defecto `lax`: bien si front y API comparten sitio (ej. fichame.pe + api.fichame.pe).
-   * - `none` + Secure: necesario si el SPA y el API están en **dominios de tercer nivel distintos**
-   *   (ej. *.vercel.app vs *.railway.app); sin esto el navegador no manda la cookie en fetch/XHR.
+   * - `AUTH_COOKIE_SAMESITE=lax`: mismo site registrable (ej. fichamepe.com + api.fichamepe.com).
+   * - `AUTH_COOKIE_SAMESITE=none`: cross-site explícito (Secure siempre).
+   * - Sin variable en `NODE_ENV=production`: por defecto `none` (Vercel + API en otro host p. ej.
+   *   Railway); si no, tras F5 el POST /auth/refresh no lleva la cookie con Lax.
+   * - Desarrollo: Lax + Secure=false (HTTP local entre puertos suele seguir siendo “same-site”).
    */
   private cookieFlags(): { secure: boolean; sameSite: 'lax' | 'none' } {
     const raw = this.configService
@@ -33,10 +35,16 @@ export class AuthCookieService {
     if (raw === 'none') {
       return { sameSite: 'none', secure: true };
     }
-    return {
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    };
+    if (raw === 'lax') {
+      return {
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      };
+    }
+    if (process.env.NODE_ENV === 'production') {
+      return { sameSite: 'none', secure: true };
+    }
+    return { sameSite: 'lax', secure: false };
   }
 
   setAuthCookies(res: Response, refreshToken: string, role: UserRole): void {
