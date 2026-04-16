@@ -408,3 +408,4 @@
 {"sessionId":"943a62","runId":"run-2","hypothesisId":"H9","location":"src/app/dashboard/resumen/ResumenClient.tsx:services.ResizeObserver","message":"services-chart-ready-size","data":{"width":430,"height":256},"timestamp":1776310845782}
 {"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/auth/login"},"timestamp":1776310855264}
 {"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/auth/login"},"timestamp":1776310896563}
+{"sessionId":"943a62","runId":"run-1","hypothesisId":"H5","location":"src/app/providers.tsx:Providers.useEffect(init)","message":"providers-mounted","data":{"pathname":"/dashboard/revision"},"timestamp":1776311888272}

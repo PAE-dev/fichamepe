@@ -1,0 +1,10 @@
+# Railway cuando el servicio tiene "Root Directory" = backend (no ve el nixpacks.toml del monorepo).
+# Solo npm + package-lock.json en esta carpeta.
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start:prod"
