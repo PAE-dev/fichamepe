@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { Server, Socket } from 'socket.io';
 import type { JwtPayload } from '../auth/domain/services/auth-token.service.interface';
+import { resolveCorsOrigin } from '../common/config/cors-origin';
 import { JoinConversationSocketDto } from './application/dto/join-conversation.dto';
 import { ConversationOrmEntity } from './infrastructure/persistence/entities/conversation.orm-entity';
 
@@ -28,7 +29,7 @@ function roomForConversation(conversationId: string): string {
 )
 @WebSocketGateway({
   cors: {
-    origin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
+    origin: resolveCorsOrigin(),
     credentials: true,
   },
   transports: ['websocket', 'polling'],

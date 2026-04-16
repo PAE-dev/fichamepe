@@ -1,0 +1,7 @@
+# Railway / Nixpacks: monorepo pnpm (sin package-lock.json en la raíz).
+# Evita que la fase build use `npm ci`, que falla sin lockfile de npm.
+[phases.build]
+cmds = ["pnpm run build"]
+
+[start]
+cmd = "pnpm run start"
