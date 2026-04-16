@@ -1,0 +1,7 @@
+{
+  "name": "fichamepe",
+  "private": true,
+  "engines": {
+    "node": "20"
+  }
+}
