@@ -108,6 +108,14 @@ export function writeCountryCookie(value: string): void {
   document.cookie = `${COUNTRY_COOKIE_NAME}=${encodeURIComponent(code)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`;
 }
 
+/** Quita el país guardado en cookie (vista «Todo el mundo»). */
+export function clearCountryCookie(): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+  document.cookie = `${COUNTRY_COOKIE_NAME}=; path=/; max-age=0; samesite=lax`;
+}
+
 export function getCountryOptions(locale = "es"): CountryOption[] {
   const codes = getAllCountryCodes();
   const displayNames = new Intl.DisplayNames([locale], { type: "region" });

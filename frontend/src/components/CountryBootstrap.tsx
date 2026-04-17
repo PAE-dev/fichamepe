@@ -2,18 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { normalizeCountryCode } from "@/lib/country";
 import { useCountryStore } from "@/stores/countryStore";
 
-type GeoCountryResponse = {
-  countryCode?: string | null;
-};
-
+/**
+ * Hidrata el país desde la cookie si el usuario no eligió ya un modo manual
+ * en el store persistido. No infiere país por IP (el feed por defecto es mundial).
+ */
 export function CountryBootstrap() {
   const router = useRouter();
   const ran = useRef(false);
   const hydrateFromCookie = useCountryStore((s) => s.hydrateFromCookie);
-  const setAutoCountry = useCountryStore((s) => s.setAutoCountry);
 
   useEffect(() => {
     if (ran.current) {
@@ -24,37 +22,10 @@ export function CountryBootstrap() {
 
     hydrateFromCookie();
     const afterCookie = useCountryStore.getState();
-    if (afterCookie.countryCode) {
-      if (!initialCountry) {
-        router.refresh();
-      }
-      return;
+    if (afterCookie.countryCode && !initialCountry) {
+      router.refresh();
     }
-
-    let cancelled = false;
-    void fetch("/api/geo/country", { credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) {
-          return null;
-        }
-        const data = (await res.json()) as GeoCountryResponse;
-        return normalizeCountryCode(data.countryCode ?? null);
-      })
-      .then((detected) => {
-        if (!detected || cancelled) {
-          return;
-        }
-        setAutoCountry(detected);
-        if (!initialCountry) {
-          router.refresh();
-        }
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, [hydrateFromCookie, router, setAutoCountry]);
+  }, [hydrateFromCookie, router]);
 
   return null;
 }

@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
@@ -7,6 +7,8 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Length,
+  Matches,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -43,4 +45,14 @@ export class UpdateUserBodyDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+  /** ISO 3166-1 alpha-2 (p. ej. PE). Sincroniza con el país elegido en la app para el feed. */
+  @IsOptional()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
+  @IsString()
+  @Length(2, 2)
+  @Matches(/^[A-Z]{2}$/)
+  countryCode?: string;
 }

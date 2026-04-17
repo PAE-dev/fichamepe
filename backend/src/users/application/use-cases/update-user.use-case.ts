@@ -66,6 +66,9 @@ export class UpdateUserUseCase {
         );
       }
     }
+    if (command.patch.countryCode !== undefined) {
+      patch.countryCode = command.patch.countryCode;
+    }
 
     if (Object.keys(patch).length === 0) {
       const { password: _p, ...safe } = existing;

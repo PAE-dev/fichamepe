@@ -15,13 +15,6 @@ export async function GET(request: NextRequest) {
   const countryCode = fromCookie ?? detected ?? null;
 
   const response = NextResponse.json({ countryCode });
-  if (countryCode && !fromCookie) {
-    response.cookies.set(COUNTRY_COOKIE_NAME, countryCode, {
-      path: "/",
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 365,
-    });
-  }
+  /** No guardamos país detectado por IP en cookie: el listado por defecto es sin filtro. */
   return response;
 }

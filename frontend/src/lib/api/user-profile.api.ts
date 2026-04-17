@@ -62,6 +62,8 @@ export type PatchUserBody = {
   fullName?: string;
   /** Solo `false`: desactiva la cuenta (no se puede reactivar desde la app). */
   isActive?: boolean;
+  /** ISO 3166-1 alpha-2 (p. ej. PE), alineado con el selector de país del feed. */
+  countryCode?: string;
 };
 
 export async function patchCurrentUser(userId: string, body: PatchUserBody): Promise<void> {
