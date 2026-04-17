@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Response } from 'express';
+import type { CookieOptions, Response } from 'express';
 import type { UserRole } from '../../../users/domain/entities/user';
 import {
   FP_REFRESH_COOKIE,
@@ -47,27 +47,43 @@ export class AuthCookieService {
     return { sameSite: 'lax', secure: false };
   }
 
-  setAuthCookies(res: Response, refreshToken: string, role: UserRole): void {
+  /**
+   * CHIPS (`Partitioned`): Chrome/Brave pueden bloquear cookies cross-site sin esto;
+   * el front en www y el API en otro host necesitan SameSite=None + Partitioned.
+   */
+  private cookieOptions(): CookieOptions {
     const { secure, sameSite } = this.cookieFlags();
-    res.cookie(FP_REFRESH_COOKIE, refreshToken, {
+    const base: CookieOptions = {
       httpOnly: true,
       secure,
       sameSite,
       path: '/',
       maxAge: this.refreshMaxAgeMs,
-    });
-    res.cookie(FP_ROLE_COOKIE, role, {
-      httpOnly: true,
-      secure,
-      sameSite,
-      path: '/',
-      maxAge: this.refreshMaxAgeMs,
-    });
+    };
+    if (sameSite === 'none' && secure) {
+      return { ...base, partitioned: true };
+    }
+    return base;
+  }
+
+  private clearCookieOptions(): CookieOptions {
+    const { secure, sameSite } = this.cookieFlags();
+    const base: CookieOptions = { path: '/', secure, sameSite };
+    if (sameSite === 'none' && secure) {
+      return { ...base, partitioned: true };
+    }
+    return base;
+  }
+
+  setAuthCookies(res: Response, refreshToken: string, role: UserRole): void {
+    const opts = this.cookieOptions();
+    res.cookie(FP_REFRESH_COOKIE, refreshToken, opts);
+    res.cookie(FP_ROLE_COOKIE, role, opts);
   }
 
   clearAuthCookies(res: Response): void {
-    const { secure, sameSite } = this.cookieFlags();
-    res.clearCookie(FP_REFRESH_COOKIE, { path: '/', secure, sameSite });
-    res.clearCookie(FP_ROLE_COOKIE, { path: '/', secure, sameSite });
+    const opts = this.clearCookieOptions();
+    res.clearCookie(FP_REFRESH_COOKIE, opts);
+    res.clearCookie(FP_ROLE_COOKIE, opts);
   }
 }
