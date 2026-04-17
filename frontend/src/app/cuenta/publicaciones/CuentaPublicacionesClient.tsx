@@ -7,7 +7,9 @@ import { Modal } from "@heroui/react/modal";
 import { ArrowRight, Layers, LogIn, Megaphone, Sparkles } from "lucide-react";
 import { Button } from "@heroui/react/button";
 import { ServiceCard } from "@/components/cards/ServiceCard";
-import { PublicationSlotsPurchasePanel } from "@/components/cuenta/PublicationSlotsPurchasePanel";
+import { PublicationPlanUpsellStrip } from "@/components/cuenta/PublicationPlanUpsellStrip";
+import { PublicationQuotaOverview } from "@/components/cuenta/PublicationQuotaOverview";
+import { ReferralPublicationBoostCta } from "@/components/cuenta/ReferralPublicationBoostCta";
 import { useAuthStore } from "@/store/auth.store";
 import {
   deleteSkill,
@@ -39,6 +41,8 @@ export function CuentaPublicacionesClient() {
   const [loadError, setLoadError] = useState(false);
   const [deleting, setDeleting] = useState<ServicePublic | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showReviewNotice, setShowReviewNotice] = useState(false);
+  const [showDraftNotice, setShowDraftNotice] = useState(false);
   const initialFilter = searchParams.get("filtro");
   const [filter, setFilter] = useState<PublicationFilter>(
     initialFilter === "ACTIVA" ||
@@ -56,6 +60,28 @@ export function CuentaPublicacionesClient() {
   };
 
   useEffect(() => {
+    const toastVal = searchParams.get("toast");
+    if (toastVal === "review-submitted") {
+      setShowReviewNotice(true);
+      setFilter("EN_REVISION");
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("toast");
+      next.set("filtro", "EN_REVISION");
+      const qs = next.toString();
+      router.replace(qs ? `/cuenta/publicaciones?${qs}` : "/cuenta/publicaciones");
+      return;
+    }
+    if (toastVal === "draft-saved") {
+      setShowDraftNotice(true);
+      setFilter("BORRADOR");
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("toast");
+      next.set("filtro", "BORRADOR");
+      const qs = next.toString();
+      router.replace(qs ? `/cuenta/publicaciones?${qs}` : "/cuenta/publicaciones");
+      return;
+    }
+
     const nextFilter = searchParams.get("filtro");
     if (
       nextFilter === "ACTIVA" ||
@@ -68,7 +94,7 @@ export function CuentaPublicacionesClient() {
       return;
     }
     setFilter("all");
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -98,57 +124,23 @@ export function CuentaPublicacionesClient() {
   }, [isAuthenticated]);
 
   const isEmpty = isAuthenticated && !loading && !loadError && items.length === 0;
-  const toast = searchParams.get("toast");
   const filteredItems = items.filter((item) => (filter === "all" ? true : item.status === filter));
 
   return (
     <div className="w-full">
-      <header className="mb-8 max-w-3xl">
+      <header className="mb-6 max-w-3xl">
         <p className="text-xs font-semibold uppercase tracking-wide text-primary">Marketplace</p>
         <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
           Mis publicaciones
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-muted sm:text-[15px]">
-          Aquí ves todo lo que ofreces como freelancer: estado, vistas y acceso rápido a cada ficha.
+        <p className="mt-2 text-sm text-muted sm:text-[15px]">
+          Revisa el estado de cada ficha y edítala o pausala cuando quieras.
         </p>
-        {isAuthenticated && !loading && !loadError ? (
-          <>
-            <p className="mt-3 text-sm font-medium text-foreground">
-              {items.length === 1 ? "1 ficha en tu cuenta" : `${items.length} fichas en tu cuenta`}{" "}
-              <span className="text-muted">(borradores, revisión, pausadas y activas)</span>
-            </p>
-            {user && !user.isPublicationExempt && user.publicationActiveMax != null ? (
-              <p className="mt-1 text-sm text-foreground">
-                <span className="font-semibold tabular-nums">
-                  {user.publicationActiveCount}/{user.publicationActiveMax}
-                </span>{" "}
-                publicaciones <strong className="font-semibold">activas</strong> a la vez
-                {user.isPro ? (
-                  <span className="text-muted"> — plan mensual vigente (hasta 10 o más si ya sumaste cupos).</span>
-                ) : (
-                  <span className="text-muted">
-                    {" "}
-                    — base 3 + hasta 3 por referidos + slots comprados. Suscripción mensual sube el tope.{" "}
-                    <Link href="/cuenta/plan" className="font-medium text-primary underline-offset-2 hover:underline">
-                      Ver planes y cupos
-                    </Link>
-                    .
-                  </span>
-                )}
-              </p>
-            ) : null}
-            {toast === "review-submitted" ? (
-              <p className="mt-3 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-sm font-medium text-primary">
-                Tu publicación fue enviada a revisión. Te avisaremos cuando esté aprobada o si requiere
-                ajustes.
-              </p>
-            ) : null}
-            {toast === "draft-saved" ? (
-              <p className="mt-3 rounded-xl border border-border bg-surface-elevated px-3 py-2 text-sm font-medium text-muted">
-                Guardaste tu publicación como borrador.
-              </p>
-            ) : null}
-          </>
+        {isAuthenticated && !loading && !loadError && user ? (
+          <div className="mt-5 max-w-2xl space-y-4">
+            <PublicationQuotaOverview user={user} totalListings={items.length} />
+            <ReferralPublicationBoostCta user={user} />
+          </div>
         ) : null}
       </header>
 
@@ -209,7 +201,7 @@ export function CuentaPublicacionesClient() {
         </div>
       ) : isEmpty ? (
         <>
-          <PublicationSlotsPurchasePanel className="mb-6" />
+          <PublicationPlanUpsellStrip />
           <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/[0.07] via-white to-accent/[0.05] px-6 py-14 text-center shadow-sm sm:px-12">
           <div className="pointer-events-none absolute -right-16 top-0 h-52 w-52 rounded-full bg-primary/12 blur-3xl" aria-hidden />
           <div className="pointer-events-none absolute -left-10 bottom-0 h-44 w-44 rounded-full bg-accent/15 blur-3xl" aria-hidden />
@@ -249,7 +241,7 @@ export function CuentaPublicacionesClient() {
         </>
       ) : (
         <>
-          <PublicationSlotsPurchasePanel className="mb-6" />
+          <PublicationPlanUpsellStrip />
 
           <div className="mb-5 flex flex-wrap items-center gap-2">
             {FILTERS.map((item) => {
@@ -276,6 +268,25 @@ export function CuentaPublicacionesClient() {
               );
             })}
           </div>
+
+          {showReviewNotice && filter === "EN_REVISION" ? (
+            <div
+              role="status"
+              className="mb-4 rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm font-medium leading-snug text-primary"
+            >
+              Tu ficha quedó <strong className="font-semibold">en revisión</strong>. Te avisaremos cuando esté aprobada
+              o si hace falta algún ajuste. La verás justo debajo en esta misma vista.
+            </div>
+          ) : null}
+          {showDraftNotice && filter === "BORRADOR" ? (
+            <div
+              role="status"
+              className="mb-4 rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm font-medium leading-snug text-muted"
+            >
+              Guardaste tu ficha como <strong className="font-semibold text-foreground">borrador</strong>. Sigue
+              editándola y envíala a revisión cuando esté lista.
+            </div>
+          ) : null}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {filteredItems.map((service) => (

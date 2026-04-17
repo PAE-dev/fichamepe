@@ -26,10 +26,9 @@ import {
   type SubscriptionRow,
 } from "@/lib/api/subscriptions.api";
 import { useAuthStore } from "@/store/auth.store";
+import { REFERRAL_EXTRA_PUBLICATIONS_CAP } from "@/lib/publication-limits";
 
 const PRO_ACTIVE_FLOOR = 10;
-/** Máximo de publicaciones activas extra por programa de referidos (alineado con backend). */
-const REFERRAL_EXTRA_PUBLICATIONS_CAP = 3;
 
 function SummaryStatCard({
   icon,
@@ -484,7 +483,10 @@ export function CuentaPlanClient() {
       </Card>
 
       {!user.isPublicationExempt ? (
-        <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-8">
+        <section
+          id="ampliar-publicaciones"
+          className="scroll-mt-24 rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-8"
+        >
           <header className="border-b border-border pb-6">
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">Planes</p>
             <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
