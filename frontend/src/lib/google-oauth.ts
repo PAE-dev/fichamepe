@@ -47,4 +47,4 @@ export function buildGoogleOAuthStartUrl(
 
 /** Mensaje para mostrar si el front se desplegó sin `NEXT_PUBLIC_API_URL`. */
 export const GOOGLE_OAUTH_MISSING_API_URL_MESSAGE =
-  "Falta configurar NEXT_PUBLIC_API_URL en el hosting del front (URL absoluta del API, p. ej. https://tu-api.up.railway.app). Vuelve a desplegar después de añadirla.";
+  "Falta configurar NEXT_PUBLIC_API_URL (URL del API, p. ej. https://api.tudominio.com). Vuelve a desplegar después de añadirla.";

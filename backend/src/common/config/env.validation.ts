@@ -122,6 +122,15 @@ class EnvironmentVariables {
   @Transform(emptyToUndefined)
   @IsString()
   GOOGLE_CALLBACK_URL?: string;
+
+  /**
+   * Ej. `.fichamepe.com` cuando el API está en `api.fichamepe.com` y el front en `www.fichamepe.com`
+   * (cookies compartidas; no usar con `*.railway.app`).
+   */
+  @IsOptional()
+  @Transform(emptyToUndefined)
+  @IsString()
+  AUTH_COOKIE_DOMAIN?: string;
 }
 
 function formatValidationErrors(

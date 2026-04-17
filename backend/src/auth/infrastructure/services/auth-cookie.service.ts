@@ -8,6 +8,14 @@ import {
 } from '../constants/auth-cookies.constants';
 import { parseEnvDurationToSeconds } from '../utils/parse-env-duration';
 
+function normalizeAuthCookieDomain(raw: string | undefined): string | undefined {
+  const s = raw?.trim().toLowerCase();
+  if (!s || s.includes('localhost')) {
+    return undefined;
+  }
+  return s.startsWith('.') ? s : `.${s}`;
+}
+
 @Injectable()
 export class AuthCookieService {
   private readonly refreshMaxAgeMs: number;
@@ -21,19 +29,33 @@ export class AuthCookieService {
   }
 
   /**
-   * - `AUTH_COOKIE_SAMESITE=lax`: mismo site registrable (ej. fichamepe.com + api.fichamepe.com).
-   * - `AUTH_COOKIE_SAMESITE=none`: cross-site explícito (Secure siempre).
-   * - Sin variable en `NODE_ENV=production`: por defecto `none` (Vercel + API en otro host p. ej.
-   *   Railway); si no, tras F5 el POST /auth/refresh no lleva la cookie con Lax.
-   * - Desarrollo: Lax + Secure=false (HTTP local entre puertos suele seguir siendo “same-site”).
+   * Con `AUTH_COOKIE_DOMAIN=.tudominio.com` (API en `api.tudominio.com`, web en `www.tudominio.com`):
+   * misma “site” para el navegador → `SameSite=Lax` basta; no hace falta proxy ni cookies raras.
+   * Sin dominio (API en `*.railway.app` y web en otro host): en producción `None` + `Partitioned`.
    */
-  private cookieFlags(): { secure: boolean; sameSite: 'lax' | 'none' } {
+  private cookieShape(): {
+    secure: boolean;
+    sameSite: 'lax' | 'none';
+    domain?: string;
+    partitioned?: boolean;
+  } {
+    const domain = normalizeAuthCookieDomain(
+      this.configService.get<string>('AUTH_COOKIE_DOMAIN'),
+    );
+    if (domain) {
+      return {
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        domain,
+      };
+    }
+
     const raw = this.configService
       .get<string>('AUTH_COOKIE_SAMESITE')
       ?.trim()
       .toLowerCase();
     if (raw === 'none') {
-      return { sameSite: 'none', secure: true };
+      return { sameSite: 'none', secure: true, partitioned: true };
     }
     if (raw === 'lax') {
       return {
@@ -42,36 +64,34 @@ export class AuthCookieService {
       };
     }
     if (process.env.NODE_ENV === 'production') {
-      return { sameSite: 'none', secure: true };
+      return { sameSite: 'none', secure: true, partitioned: true };
     }
     return { sameSite: 'lax', secure: false };
   }
 
-  /**
-   * CHIPS (`Partitioned`): Chrome/Brave pueden bloquear cookies cross-site sin esto;
-   * el front en www y el API en otro host necesitan SameSite=None + Partitioned.
-   */
   private cookieOptions(): CookieOptions {
-    const { secure, sameSite } = this.cookieFlags();
+    const { secure, sameSite, domain, partitioned } = this.cookieShape();
     const base: CookieOptions = {
       httpOnly: true,
       secure,
       sameSite,
       path: '/',
       maxAge: this.refreshMaxAgeMs,
+      ...(domain ? { domain } : {}),
+      ...(partitioned ? { partitioned: true } : {}),
     };
-    if (sameSite === 'none' && secure) {
-      return { ...base, partitioned: true };
-    }
     return base;
   }
 
   private clearCookieOptions(): CookieOptions {
-    const { secure, sameSite } = this.cookieFlags();
-    const base: CookieOptions = { path: '/', secure, sameSite };
-    if (sameSite === 'none' && secure) {
-      return { ...base, partitioned: true };
-    }
+    const { secure, sameSite, domain, partitioned } = this.cookieShape();
+    const base: CookieOptions = {
+      path: '/',
+      secure,
+      sameSite,
+      ...(domain ? { domain } : {}),
+      ...(partitioned ? { partitioned: true } : {}),
+    };
     return base;
   }
 
