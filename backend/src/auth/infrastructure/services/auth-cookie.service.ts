@@ -8,6 +8,7 @@ import {
 } from '../constants/auth-cookies.constants';
 import { parseEnvDurationToSeconds } from '../utils/parse-env-duration';
 
+/** Normaliza `fichamepe.com` → `.fichamepe.com`. No usar con localhost. */
 function normalizeAuthCookieDomain(raw: string | undefined): string | undefined {
   const s = raw?.trim().toLowerCase();
   if (!s || s.includes('localhost')) {
@@ -29,9 +30,14 @@ export class AuthCookieService {
   }
 
   /**
-   * Con `AUTH_COOKIE_DOMAIN=.tudominio.com` (API en `api.tudominio.com`, web en `www.tudominio.com`):
-   * misma “site” para el navegador → `SameSite=Lax` basta; no hace falta proxy ni cookies raras.
-   * Sin dominio (API en `*.railway.app` y web en otro host): en producción `None` + `Partitioned`.
+   * Modo recomendado (www + api bajo el mismo dominio, p. ej. `api.fichamepe.com`):
+   * - `AUTH_COOKIE_DOMAIN=.fichamepe.com` en Railway (el punto inicial importa).
+   * - `httpOnly: true`, `secure: true` en prod, `sameSite: 'lax'`, **sin** `Partitioned`.
+   * El API debe responder con Host `*.fichamepe.com`; si el Host es `*.up.railway.app`,
+   * el navegador **no** aceptará `Domain=.fichamepe.com` en Set-Cookie.
+   *
+   * Sin `AUTH_COOKIE_DOMAIN` y API en otro host: en producción `SameSite=None` + `Partitioned`
+   * (menos fiable entre `www` y `*.railway.app`).
    */
   private cookieShape(): {
     secure: boolean;
@@ -39,13 +45,14 @@ export class AuthCookieService {
     domain?: string;
     partitioned?: boolean;
   } {
+    const isProduction = process.env.NODE_ENV === 'production';
     const domain = normalizeAuthCookieDomain(
       this.configService.get<string>('AUTH_COOKIE_DOMAIN'),
     );
     if (domain) {
       return {
         sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction,
         domain,
       };
     }
@@ -60,37 +67,37 @@ export class AuthCookieService {
     if (raw === 'lax') {
       return {
         sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction,
       };
     }
-    if (process.env.NODE_ENV === 'production') {
+    if (isProduction) {
       return { sameSite: 'none', secure: true, partitioned: true };
     }
     return { sameSite: 'lax', secure: false };
   }
 
   private cookieOptions(): CookieOptions {
-    const { secure, sameSite, domain, partitioned } = this.cookieShape();
+    const shape = this.cookieShape();
     const base: CookieOptions = {
       httpOnly: true,
-      secure,
-      sameSite,
+      secure: shape.secure,
+      sameSite: shape.sameSite,
       path: '/',
       maxAge: this.refreshMaxAgeMs,
-      ...(domain ? { domain } : {}),
-      ...(partitioned ? { partitioned: true } : {}),
+      ...(shape.domain ? { domain: shape.domain } : {}),
+      ...(shape.partitioned ? { partitioned: true } : {}),
     };
     return base;
   }
 
   private clearCookieOptions(): CookieOptions {
-    const { secure, sameSite, domain, partitioned } = this.cookieShape();
+    const shape = this.cookieShape();
     const base: CookieOptions = {
       path: '/',
-      secure,
-      sameSite,
-      ...(domain ? { domain } : {}),
-      ...(partitioned ? { partitioned: true } : {}),
+      secure: shape.secure,
+      sameSite: shape.sameSite,
+      ...(shape.domain ? { domain: shape.domain } : {}),
+      ...(shape.partitioned ? { partitioned: true } : {}),
     };
     return base;
   }
