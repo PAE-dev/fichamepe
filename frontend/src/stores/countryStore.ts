@@ -71,20 +71,25 @@ export const useCountryStore = create<CountryState>()(
     {
       name: "fichame-country-preference",
       version: 1,
-      migrate: (persisted) => {
-        if (!persisted || typeof persisted !== "object" || !("state" in persisted)) {
-          return persisted as never;
+      migrate: (persisted, _version) => {
+        if (!persisted || typeof persisted !== "object") {
+          return { countryCode: null, selectionMode: null };
         }
-        const wrapper = persisted as {
-          state: { countryCode?: string | null; selectionMode?: CountrySelectionMode | null };
+        const p = persisted as {
+          countryCode?: unknown;
+          selectionMode?: unknown;
         };
-        if (wrapper.state.selectionMode === "auto") {
-          return {
-            ...wrapper,
-            state: { ...wrapper.state, countryCode: null, selectionMode: null },
-          };
+        const countryCode =
+          typeof p.countryCode === "string" || p.countryCode === null
+            ? p.countryCode
+            : null;
+        const sm = p.selectionMode;
+        const selectionMode: CountrySelectionMode =
+          sm === "manual" || sm === "auto" || sm === null ? sm : null;
+        if (selectionMode === "auto") {
+          return { countryCode: null, selectionMode: null };
         }
-        return persisted as never;
+        return { countryCode, selectionMode };
       },
       partialize: (state) => ({
         countryCode: state.countryCode,
