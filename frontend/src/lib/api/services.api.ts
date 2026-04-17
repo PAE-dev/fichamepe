@@ -6,6 +6,7 @@ import { normalizeCountryCode } from "@/lib/country";
 import { enrichService } from "@/lib/service-enrichment";
 
 const SEO_REVALIDATE_SECONDS = 60 * 60 * 24;
+const FEED_REVALIDATE_SECONDS = 60;
 const SERVICES_FEED_TAG = "services:feed";
 
 function unwrapApiSuccess<T>(data: unknown): T {
@@ -71,7 +72,7 @@ export async function fetchFeedServices(
   const tags = options.tags ?? [SERVICES_FEED_TAG];
   const res = await fetch(url, {
     next: {
-      revalidate: options.revalidateSeconds ?? SEO_REVALIDATE_SECONDS,
+      revalidate: options.revalidateSeconds ?? FEED_REVALIDATE_SECONDS,
       tags,
     },
     signal: AbortSignal.timeout(8000),
