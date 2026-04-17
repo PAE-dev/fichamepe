@@ -12,7 +12,6 @@ import { DiscoveryFeed } from "@/components/sections/DiscoveryFeed";
 import { NearYouSection } from "@/components/sections/NearYouSection";
 import { TopRatedSection } from "@/components/sections/TopRatedSection";
 import { NewArrivals } from "@/components/sections/NewArrivals";
-import { ComboDeals } from "@/components/sections/ComboDeals";
 import { ActivityToast } from "@/components/engagement/ActivityToast";
 import { fetchFeedServicesSafe, fetchMergedHomeFeed } from "@/lib/api/services.api";
 import { COUNTRY_COOKIE_NAME, normalizeCountryCode } from "@/lib/country";
@@ -69,7 +68,6 @@ export default async function Home() {
         <NearYouSection services={services} />
         <TopRatedSection services={services} />
         <NewArrivals services={services} />
-        <ComboDeals services={services} />
       </main>
 
       <BottomNav />
