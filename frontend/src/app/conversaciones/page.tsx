@@ -6,6 +6,7 @@ import { ArrowLeft, Send } from "lucide-react";
 import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Navbar } from "@/components/layout/Navbar";
+import { CoworkingAfterDismissCta } from "@/components/conversaciones/CoworkingAfterDismissCta";
 import { CoworkingConversationPrompt } from "@/components/conversaciones/CoworkingConversationPrompt";
 import { CoworkingSpacesPanel } from "@/components/conversaciones/CoworkingSpacesPanel";
 import { ConversationListItem } from "@/components/conversaciones/ConversationListItem";
@@ -312,6 +313,17 @@ function ConversacionesContent() {
                       />
                     </div>
                   ) : null}
+                  {shouldShowCoworkingPrompt(desktopConversation, userId) &&
+                  dismissedCoworkingPromptIds.includes(desktopConversation.id) &&
+                  coworkingPanelConversationId !== desktopConversation.id ? (
+                    <div className="pt-2">
+                      <CoworkingAfterDismissCta
+                        onRequestCoworking={() =>
+                          setCoworkingPanelConversationId(desktopConversation.id)
+                        }
+                      />
+                    </div>
+                  ) : null}
                 </div>
                 <form onSubmit={submitMessage} className="border-t border-border p-4">
                   <div className="flex items-center gap-2">
@@ -413,6 +425,17 @@ function ConversacionesContent() {
                     <CoworkingConversationPrompt
                       onOpenSpaces={() => setCoworkingPanelConversationId(mobileConversation.id)}
                       onDismiss={() => dismissCoworkingPrompt(mobileConversation.id)}
+                    />
+                  </div>
+                ) : null}
+                {shouldShowCoworkingPrompt(mobileConversation, userId) &&
+                dismissedCoworkingPromptIds.includes(mobileConversation.id) &&
+                coworkingPanelConversationId !== mobileConversation.id ? (
+                  <div className="pt-2">
+                    <CoworkingAfterDismissCta
+                      onRequestCoworking={() =>
+                        setCoworkingPanelConversationId(mobileConversation.id)
+                      }
                     />
                   </div>
                 ) : null}

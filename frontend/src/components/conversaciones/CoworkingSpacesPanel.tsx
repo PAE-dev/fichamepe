@@ -50,12 +50,33 @@ export function CoworkingSpacesPanel({
           return (
             <article
               key={space.id}
-              className={`overflow-hidden rounded-2xl border bg-surface transition ${
+              className={`flex flex-col overflow-hidden rounded-2xl border bg-surface transition ${
                 selected ? "border-primary shadow-md ring-2 ring-primary/15" : "border-border hover:border-primary/30"
               }`}
             >
-              <div className={`h-24 bg-gradient-to-br ${space.imageGradient}`} />
-              <div className="space-y-4 p-4">
+              <a
+                href={space.unsplashPhotoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative block shrink-0"
+                aria-label={`Ver foto original en Unsplash: ${space.name}`}
+              >
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-border">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- dominios Unsplash sin remotePatterns; object-cover mantiene proporción */}
+                  <img
+                    src={space.coverImageUrl}
+                    alt={`Vista del espacio: ${space.name}`}
+                    width={960}
+                    height={600}
+                    className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                </div>
+              </a>
+              <div className="flex min-h-0 flex-1 flex-col space-y-4 p-4">
                 <div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
@@ -94,7 +115,7 @@ export function CoworkingSpacesPanel({
                   ))}
                 </div>
 
-                <div className="flex flex-col gap-3 border-t border-border pt-4">
+                <div className="mt-auto flex flex-col gap-3 border-t border-border pt-4">
                   <p className="text-sm font-semibold text-foreground">{space.priceHint}</p>
                   <button
                     type="button"

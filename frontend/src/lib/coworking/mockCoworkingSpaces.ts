@@ -1,3 +1,4 @@
+/** Fotos Unsplash (licencia Unsplash): enlaces originales en la UI de cada card. */
 export type CoworkingSpace = {
   id: string;
   name: string;
@@ -7,9 +8,18 @@ export type CoworkingSpace = {
   capacity: string;
   priceHint: string;
   availability: string;
-  imageGradient: string;
+  /** URL de imagen para portada; se muestra con object-cover en altura fija. */
+  coverImageUrl: string;
+  /** Enlace a la ficha en Unsplash (atribución / ver original). */
+  unsplashPhotoUrl: string;
   highlights: string[];
 };
+
+const unsplashImg = (path: string, w: number) =>
+  `https://images.unsplash.com/${path}?auto=format&fit=crop&w=${w}&q=80`;
+
+const unsplashPlusImg = (path: string, w: number) =>
+  `https://plus.unsplash.com/${path}?auto=format&fit=crop&w=${w}&q=80`;
 
 export const mockCoworkingSpaces: CoworkingSpace[] = [
   {
@@ -21,7 +31,8 @@ export const mockCoworkingSpaces: CoworkingSpace[] = [
     capacity: "2 a 6 personas",
     priceHint: "Desde S/ 35 por hora",
     availability: "Salas disponibles hoy",
-    imageGradient: "from-primary/90 via-primary-light/80 to-accent/80",
+    coverImageUrl: unsplashImg("photo-1527192491265-7e15c55b1ed2", 960),
+    unsplashPhotoUrl: "https://unsplash.com/es/fotos/personas-sentadas-frente-a-monitores-de-computadora-dZxQn4VEv2M",
     highlights: ["Sala privada", "Wi-Fi premium", "Cafe incluido"],
   },
   {
@@ -33,7 +44,8 @@ export const mockCoworkingSpaces: CoworkingSpace[] = [
     capacity: "2 a 8 personas",
     priceHint: "Desde S/ 45 por hora",
     availability: "Ideal para reuniones formales",
-    imageGradient: "from-primary-dark/90 via-primary/80 to-slate-900/80",
+    coverImageUrl: unsplashPlusImg("premium_photo-1684769161054-2fa9a998dcb6", 960),
+    unsplashPhotoUrl: "https://unsplash.com/es/fotos/un-grupo-de-personas-sentadas-alrededor-de-una-mesa-en-una-habitacion-3y_dY4vSXII",
     highlights: ["Recepcion", "Pizarra", "Privacidad"],
   },
   {
@@ -45,7 +57,8 @@ export const mockCoworkingSpaces: CoworkingSpace[] = [
     capacity: "2 a 5 personas",
     priceHint: "Desde S/ 30 por hora",
     availability: "Ambiente relajado para idear",
-    imageGradient: "from-accent/90 via-orange-400/80 to-primary/80",
+    coverImageUrl: unsplashImg("photo-1600508774634-4e11d34730e2", 960),
+    unsplashPhotoUrl: "https://unsplash.com/es/fotos/mesa-de-madera-marron-con-sillas-VCoh27vHEh0",
     highlights: ["Espacio inspirador", "Zona cafe", "Pet friendly"],
   },
 ];
